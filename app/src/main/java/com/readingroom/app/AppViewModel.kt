@@ -127,6 +127,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // ----- notes and highlights -----
+
+    private fun changeBook(id: String, transform: (Book) -> Book) =
+        change { s -> s.copy(books = s.books.map { if (it.id == id) transform(it) else it }) }
+
+    fun addAnnotation(bookId: String, annotation: Annotation) =
+        changeBook(bookId) { it.copy(annotations = it.annotations + annotation) }
+
+    fun updateAnnotation(bookId: String, annotation: Annotation) =
+        changeBook(bookId) { b -> b.copy(annotations = b.annotations.map { if (it.id == annotation.id) annotation else it }) }
+
+    fun deleteAnnotation(bookId: String, annotationId: String) =
+        changeBook(bookId) { b -> b.copy(annotations = b.annotations.filterNot { it.id == annotationId }) }
+
     // ----- reading time -----
 
     fun addReadingSeconds(seconds: Int) {
@@ -142,6 +156,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setZoom(zoom: Float) = change { it.copy(settings = it.settings.copy(zoom = zoom.coerceIn(1f, 3f))) }
 
     fun setKeepAwake(on: Boolean) = change { it.copy(settings = it.settings.copy(keepAwake = on)) }
+
+    fun setBrightness(value: Float) = change {
+        val v = if (value < 0f) BRIGHTNESS_SYSTEM else value.coerceIn(0.05f, 1f)
+        it.copy(settings = it.settings.copy(brightness = v))
+    }
 
     fun setGoal(minutes: Int) = change { it.copy(settings = it.settings.copy(goalMinutes = minutes.coerceIn(5, 240))) }
 

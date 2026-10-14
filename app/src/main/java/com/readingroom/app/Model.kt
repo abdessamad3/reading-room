@@ -8,6 +8,61 @@ import javax.crypto.spec.PBEKeySpec
 
 enum class ReaderTheme { PAPER, SEPIA, NIGHT }
 
+enum class AnnotationKind { HIGHLIGHT, NOTE }
+
+enum class MarkColor(val label: String, val argb: Long) {
+    YELLOW("Yellow", 0xFFFFD83A),
+    GREEN("Green", 0xFF6FD186),
+    BLUE("Blue", 0xFF6FB1FF),
+    PINK("Pink", 0xFFFF8FBF),
+}
+
+/**
+ * A highlight or a sticky note on one page. Positions are fractions of the page (0..1) so they
+ * stay put at any zoom. A highlight covers left..right and top..bottom; a note sits at left,top.
+ */
+data class Annotation(
+    val id: String,
+    val page: Int,
+    val kind: AnnotationKind,
+    val color: MarkColor,
+    val left: Float,
+    val top: Float,
+    val right: Float,
+    val bottom: Float,
+    val text: String = "",
+    val createdAt: Long = 0L,
+) {
+    /** True when the point (x, y) touches this mark. [markerW] and [markerH] are the note icon size. */
+    fun contains(x: Float, y: Float, markerW: Float, markerH: Float): Boolean = when (kind) {
+        AnnotationKind.HIGHLIGHT ->
+            x in (left - HIT_SLOP)..(right + HIT_SLOP) && y in (top - HIT_SLOP)..(bottom + HIT_SLOP)
+        AnnotationKind.NOTE -> x in left..(left + markerW) && y in top..(top + markerH)
+    }
+
+    private companion object {
+        const val HIT_SLOP = 0.01f
+    }
+}
+
+object NotesExport {
+    /** Plain text of every note and highlight, in reading order, for copying out of the app. */
+    fun format(title: String, annotations: List<Annotation>): String {
+        if (annotations.isEmpty()) return "$title\n\nNo notes or highlights yet."
+        val body = annotations
+            .sortedWith(compareBy({ it.page }, { it.top }, { it.left }))
+            .joinToString("\n\n") { a ->
+                val label = when (a.kind) {
+                    AnnotationKind.NOTE -> "note"
+                    AnnotationKind.HIGHLIGHT -> "highlight, ${a.color.label.lowercase()}"
+                }
+                val header = "Page ${a.page + 1} ($label)"
+                if (a.text.isBlank()) header else "$header\n${a.text.trim()}"
+            }
+        return "$title\nNotes and highlights\n\n$body"
+    }
+}
+
 data class Book(
     val id: String,
     val title: String,
@@ -15,6 +70,7 @@ data class Book(
     val pages: Int,
     val lastPage: Int = 0,
     val bookmarks: List<Int> = emptyList(),
+    val annotations: List<Annotation> = emptyList(),
     val addedAt: Long = 0L,
     val lastOpenedAt: Long = 0L,
 ) {
@@ -31,6 +87,8 @@ data class Settings(
     val theme: ReaderTheme = ReaderTheme.PAPER,
     val zoom: Float = 1f,
     val keepAwake: Boolean = true,
+    /** Screen brightness 0.05..1, or [BRIGHTNESS_SYSTEM] to follow the phone. */
+    val brightness: Float = BRIGHTNESS_SYSTEM,
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 }
@@ -41,6 +99,8 @@ data class AppState(
     val settings: Settings = Settings(),
     val readingLog: Map<String, Int> = emptyMap(),
 )
+
+const val BRIGHTNESS_SYSTEM = -1f
 
 object PinHasher {
     private const val ITERATIONS = 20_000

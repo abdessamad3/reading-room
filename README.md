@@ -2,6 +2,15 @@
 
 An Android app that turns a phone into a quiet place to read PDFs. It becomes the Home screen, hides every other app behind a PIN-protected focus lock, and gives you a reader with page colors, zoom, bookmarks and a daily reading goal.
 
+## Reading tools
+
+- **Highlighter:** pick a color in the bottom bar and drag over the text. Tap a highlight to add a note, change its color or delete it.
+- **Notes:** pick the note tool and tap where the note goes.
+- **Notes list:** the notes icon in the top bar lists every highlight (with a cut-out of the page) and note. Tap one to jump to its page, or copy everything as text.
+- **Also:** bookmarks, Paper/Sepia/Night, zoom, brightness, page slider, reading goal and streak.
+
+Highlights are drawn over the page picture, so they mark an area rather than selected words. Search, table of contents and dictionary lookup need text extraction, which Android's built-in PDF renderer does not offer.
+
 ## How the lock works
 
 | Mode | Setup | What it does |

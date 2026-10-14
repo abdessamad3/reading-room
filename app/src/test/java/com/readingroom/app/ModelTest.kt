@@ -84,3 +84,55 @@ class BookTest {
         assertEquals(0f, book(1, 0).progress, 0.001f)
     }
 }
+
+class AnnotationTest {
+    private fun mark(kind: AnnotationKind, l: Float, t: Float, r: Float, b: Float, text: String = "", page: Int = 0, color: MarkColor = MarkColor.YELLOW) =
+        Annotation("id", page, kind, color, l, t, r, b, text)
+
+    @Test
+    fun highlightIsHitInsideAndJustOutsideItsEdges() {
+        val h = mark(AnnotationKind.HIGHLIGHT, 0.2f, 0.3f, 0.6f, 0.35f)
+        assertTrue(h.contains(0.4f, 0.32f, 0.07f, 0.05f))
+        assertTrue(h.contains(0.195f, 0.32f, 0.07f, 0.05f))
+        assertFalse(h.contains(0.1f, 0.32f, 0.07f, 0.05f))
+        assertFalse(h.contains(0.4f, 0.5f, 0.07f, 0.05f))
+    }
+
+    @Test
+    fun noteIsHitOnlyOnItsIcon() {
+        val n = mark(AnnotationKind.NOTE, 0.5f, 0.5f, 0.5f, 0.5f)
+        assertTrue(n.contains(0.52f, 0.52f, 0.07f, 0.05f))
+        assertFalse(n.contains(0.49f, 0.52f, 0.07f, 0.05f))
+        assertFalse(n.contains(0.52f, 0.6f, 0.07f, 0.05f))
+    }
+
+    @Test
+    fun exportListsMarksInReadingOrder() {
+        val text = NotesExport.format(
+            "Walden",
+            listOf(
+                mark(AnnotationKind.NOTE, 0.1f, 0.5f, 0.1f, 0.5f, text = "Compare with chapter 2", page = 11),
+                mark(AnnotationKind.HIGHLIGHT, 0.1f, 0.2f, 0.9f, 0.25f, page = 2, color = MarkColor.GREEN),
+                mark(AnnotationKind.HIGHLIGHT, 0.1f, 0.6f, 0.9f, 0.65f, text = "Key idea", page = 2),
+            ),
+        )
+        val expected = listOf(
+            "Walden",
+            "Notes and highlights",
+            "",
+            "Page 3 (highlight, green)",
+            "",
+            "Page 3 (highlight, yellow)",
+            "Key idea",
+            "",
+            "Page 12 (note)",
+            "Compare with chapter 2",
+        ).joinToString("\n")
+        assertEquals(expected, text)
+    }
+
+    @Test
+    fun exportOfNothingSaysSo() {
+        assertEquals("Walden\n\nNo notes or highlights yet.", NotesExport.format("Walden", emptyList()))
+    }
+}
