@@ -7,6 +7,7 @@ import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -108,7 +109,7 @@ private fun palette(theme: ReaderTheme): Palette = when (theme) {
 private const val MAX_ZOOM = 3f
 private const val ZOOM_STEP = 0.25f
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
     val state by viewModel.state.collectAsStateWithLifecycle()
