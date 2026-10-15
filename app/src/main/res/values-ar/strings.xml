@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">غرفة القراءة</string>
+
+    <!-- Common -->
+    <string name="back">رجوع</string>
+    <string name="cancel">إلغاء</string>
+    <string name="remove">إزالة</string>
+    <string name="save">حفظ</string>
+    <string name="delete">حذف</string>
+    <string name="settings">الإعدادات</string>
+    <string name="all_apps">كل التطبيقات</string>
+    <string name="loading_apps">جارٍ تحميل التطبيقات…</string>
+
+    <!-- PIN -->
+    <string name="pin_enter_title">أدخل رمز PIN</string>
+    <string name="pin_enter_subtitle">سيتوقف القفل وتعود تطبيقاتك الأخرى.</string>
+    <string name="pin_wrong">رمز PIN غير صحيح. حاول مرة أخرى.</string>
+    <string name="lock_off_msg">تم إيقاف قفل التركيز.</string>
+    <string name="pin_choose_title">اختر رمز PIN من 4 أرقام</string>
+    <string name="pin_choose_subtitle">ستحتاج إليه لإيقاف القفل. اختر رمزًا تتذكره.</string>
+    <string name="pin_saved_lock_on">تم حفظ الرمز. قفل التركيز مفعّل.</string>
+    <string name="pin_current_title">أدخل رمز PIN الحالي</string>
+    <string name="pin_current_subtitle">بعدها يمكنك اختيار رمز جديد.</string>
+    <string name="pin_new_title">اختر رمز PIN جديدًا</string>
+    <string name="pin_new_subtitle">4 أرقام.</string>
+    <string name="pin_changed">تم تغيير الرمز.</string>
+    <string name="pin_again">أدخله مرة أخرى</string>
+    <string name="pin_mismatch">الرمزان غير متطابقين. ابدأ من جديد.</string>
+    <string name="pin_digits_entered">تم إدخال %1$d من %2$d أرقام</string>
+
+    <!-- Importing and backup messages -->
+    <string name="untitled">بدون عنوان</string>
+    <string name="import_failed_all">تعذّر فتح هذا الملف كملف PDF.</string>
+    <string name="import_partial">تمت إضافة %1$d، لكن تعذّر فتح %2$d.</string>
+    <string name="import_added_notes">تمت إضافة %1$d واستعادة ملاحظاتك المحفوظة.</string>
+    <string name="import_already">موجود بالفعل في مكتبتك.</string>
+    <string name="backup_saved">تم حفظ النسخة الاحتياطية. تتضمن ملاحظاتك وتمييزاتك وموضع قراءتك، دون ملفات PDF.</string>
+    <string name="backup_failed">تعذّر حفظ النسخة الاحتياطية. جرّب مكانًا آخر.</string>
+    <string name="restore_invalid">هذا الملف ليس نسخة احتياطية من غرفة القراءة.</string>
+
+    <plurals name="import_added">
+        <item quantity="zero">لم تتم إضافة أي ملف PDF.</item>
+        <item quantity="one">تمت إضافة ملف PDF واحد.</item>
+        <item quantity="two">تمت إضافة ملفَّي PDF.</item>
+        <item quantity="few">تمت إضافة %d ملفات PDF.</item>
+        <item quantity="many">تمت إضافة %d ملف PDF.</item>
+        <item quantity="other">تمت إضافة %d ملف PDF.</item>
+    </plurals>
+    <plurals name="restore_done">
+        <item quantity="zero">لم تتم استعادة أي كتاب.</item>
+        <item quantity="one">تمت استعادة كتاب واحد.</item>
+        <item quantity="two">تمت استعادة كتابين.</item>
+        <item quantity="few">تمت استعادة %d كتب.</item>
+        <item quantity="many">تمت استعادة %d كتابًا.</item>
+        <item quantity="other">تمت استعادة %d كتاب.</item>
+    </plurals>
+    <plurals name="restore_waiting">
+        <item quantity="zero">لا توجد كتب أخرى تنتظر.</item>
+        <item quantity="one">سيستعيد كتاب آخر ملاحظاته عند استيراد ملف PDF الخاص به.</item>
+        <item quantity="two">سيستعيد كتابان آخران ملاحظاتهما عند استيراد ملفَّي PDF الخاصين بهما.</item>
+        <item quantity="few">ستستعيد %d كتب أخرى ملاحظاتها عند استيراد ملفات PDF الخاصة بها.</item>
+        <item quantity="many">سيستعيد %d كتابًا آخر ملاحظاتها عند استيراد ملفات PDF الخاصة بها.</item>
+        <item quantity="other">سيستعيد %d كتاب آخر ملاحظاتها عند استيراد ملفات PDF الخاصة بها.</item>
+    </plurals>
+
+    <!-- Library -->
+    <string name="focus_lock_on">قفل التركيز مفعّل</string>
+    <string name="focus_lock_off_title">قفل التركيز متوقف</string>
+    <string name="focus_lock_off_body">تطبيقاتك الأخرى متاحة. فعّل القفل لتبقى ملفات PDF وحدها أمامك.</string>
+    <string name="turn_lock_on">تفعيل القفل</string>
+    <string name="todays_reading">قراءة اليوم</string>
+    <string name="minutes_of">%1$d من %2$d د</string>
+    <string name="streak_none">لا توجد سلسلة بعد</string>
+    <string name="goal_reached">تم بلوغ الهدف</string>
+    <string name="min_to_go">متبقٍّ %d د</string>
+    <string name="continue_reading">متابعة القراءة</string>
+    <string name="page_of">الصفحة %1$d من %2$d</string>
+    <string name="your_pdfs">ملفات PDF الخاصة بك</string>
+    <string name="library_empty">لا شيء هنا بعد. اضغط «استيراد PDF» واختر الملفات التي تريد قراءتها.</string>
+    <string name="import_pdf">استيراد PDF</string>
+    <string name="remove_title">إزالة من المكتبة؟</string>
+    <string name="remove_body">ستتم إزالة «%1$s» من غرفة القراءة. لن يُحذف الملف نفسه.</string>
+    <string name="remove_from_library">إزالة من المكتبة</string>
+    <string name="more_options">خيارات إضافية لـ «%1$s»</string>
+    <string name="book_info">%1$s · تمت قراءة %2$d%%</string>
+    <plurals name="streak_days">
+        <item quantity="zero">سلسلة من 0 يوم</item>
+        <item quantity="one">سلسلة من يوم واحد</item>
+        <item quantity="two">سلسلة من يومين</item>
+        <item quantity="few">سلسلة من %d أيام</item>
+        <item quantity="many">سلسلة من %d يومًا</item>
+        <item quantity="other">سلسلة من %d يوم</item>
+    </plurals>
+    <plurals name="files_count">
+        <item quantity="zero">لا ملفات</item>
+        <item quantity="one">ملف واحد</item>
+        <item quantity="two">ملفان</item>
+        <item quantity="few">%d ملفات</item>
+        <item quantity="many">%d ملفًا</item>
+        <item quantity="other">%d ملف</item>
+    </plurals>
+    <plurals name="book_pages">
+        <item quantity="zero">لا صفحات</item>
+        <item quantity="one">صفحة واحدة</item>
+        <item quantity="two">صفحتان</item>
+        <item quantity="few">%d صفحات</item>
+        <item quantity="many">%d صفحة</item>
+        <item quantity="other">%d صفحة</item>
+    </plurals>
+
+    <!-- Reader -->
+    <string name="cd_back_library">العودة إلى المكتبة</string>
+    <string name="cd_search">بحث في هذا الملف</string>
+    <string name="cd_notes">الملاحظات والتمييزات، %1$d حتى الآن</string>
+    <string name="bookmark_remove">إزالة الإشارة المرجعية</string>
+    <string name="bookmark_add">إضافة إشارة مرجعية لهذه الصفحة</string>
+    <string name="cd_reading_settings">إعدادات القراءة</string>
+    <string name="pdf_open_failed">تعذّر فتح هذا الملف.</string>
+    <string name="pdf_open_failed_hint">ربما نُقل أو حُذف أو محمي بكلمة مرور.</string>
+    <string name="last_page">وصلت إلى الصفحة الأخيرة.</string>
+    <string name="first_page">هذه هي الصفحة الأولى.</string>
+    <string name="highlight_added_hint">تمت إضافة التمييز. اضغط عليه لإضافة ملاحظة أو تغيير لونه.</string>
+    <string name="no_text_page">لا يوجد نص قابل للتحديد في هذه الصفحة. ربما هي صورة ممسوحة ضوئيًا.</string>
+    <string name="note_deleted">تم حذف الملاحظة.</string>
+    <string name="highlight_deleted">تم حذف التمييز.</string>
+    <string name="copied">تم النسخ.</string>
+    <string name="copied_notes">تم نسخ الملاحظات. الصقها في أي تطبيق.</string>
+    <string name="session_time">هذه الجلسة %1$d:%2$02d</string>
+    <string name="cd_page">الصفحة %1$d</string>
+    <string name="page_color">لون الصفحة</string>
+    <string name="theme_paper">ورقي</string>
+    <string name="theme_sepia">بنّي دافئ</string>
+    <string name="theme_night">ليلي</string>
+    <string name="zoom">التكبير</string>
+    <string name="match_brightness">مطابقة سطوع الهاتف</string>
+    <string name="keep_screen_on">إبقاء الشاشة مضاءة</string>
+
+    <!-- Reader tools -->
+    <string name="tool_read">قراءة وتمرير</string>
+    <string name="tool_note">إضافة ملاحظة</string>
+    <string name="tool_eraser">ممحاة</string>
+    <string name="highlighter_cd">قلم تمييز %1$s</string>
+    <string name="hint_selecting">اختر لونًا لتمييز النص المحدد</string>
+    <string name="hint_erase">اضغط على علامة لحذفها</string>
+    <string name="hint_highlight">اسحب فوق الصفحة للتمييز</string>
+    <string name="hint_note">اضغط في مكان الملاحظة</string>
+    <string name="hint_read">اضغط مطولًا على النص لتحديده</string>
+    <string name="color_yellow">أصفر</string>
+    <string name="color_green">أخضر</string>
+    <string name="color_blue">أزرق</string>
+    <string name="color_pink">وردي</string>
+    <string name="color_label">اللون</string>
+
+    <!-- Notes, highlights, selection -->
+    <string name="note_on_page">ملاحظة في الصفحة %1$d</string>
+    <string name="highlight_on_page">تمييز في الصفحة %1$d</string>
+    <string name="your_note">ملاحظتك</string>
+    <string name="note_optional">ملاحظة (اختيارية)</string>
+    <string name="delete_note">حذف هذه الملاحظة</string>
+    <string name="delete_highlight">حذف هذا التمييز</string>
+    <string name="notes_title">الملاحظات والتمييزات (%1$d)</string>
+    <string name="copy_all">نسخ الكل</string>
+    <string name="notes_empty">لا شيء بعد. اختر لون قلم التمييز أو أداة الملاحظة من الشريط السفلي، ثم علّم الصفحة.</string>
+    <string name="page_kind_note">الصفحة %1$d · ملاحظة</string>
+    <string name="page_kind_highlight">الصفحة %1$d · تمييز</string>
+    <string name="cd_delete_note">حذف الملاحظة في الصفحة %1$d</string>
+    <string name="cd_delete_highlight">حذف التمييز في الصفحة %1$d</string>
+    <string name="cd_highlighted_part">الجزء المميَّز من الصفحة %1$d</string>
+    <string name="selecting">جارٍ التحديد…</string>
+    <string name="cd_copy_selected">نسخ النص المحدد</string>
+    <string name="cd_highlight_note">تمييز وإضافة ملاحظة</string>
+    <string name="cd_clear_selection">إلغاء التحديد</string>
+
+    <!-- Search -->
+    <string name="search_not_ready">البحث غير جاهز بعد، أو غير متاح لهذا الملف (ربما هو مقفل).</string>
+    <string name="search_min">اكتب حرفين على الأقل.</string>
+    <string name="search_none">لا توجد نتائج. الصفحات الممسوحة ضوئيًا لا تحتوي على نص قابل للبحث.</string>
+    <string name="search_matches_max">أكثر من %d نتيجة</string>
+    <string name="search_progress">جارٍ البحث… الصفحة %1$d من %2$d</string>
+    <string name="search_clear_marks">مسح علامات البحث من الصفحات</string>
+    <string name="cd_clear_search">مسح علامات البحث</string>
+    <string name="page_short">ص %1$d</string>
+    <plurals name="search_matches">
+        <item quantity="zero">لا نتائج</item>
+        <item quantity="one">نتيجة واحدة</item>
+        <item quantity="two">نتيجتان</item>
+        <item quantity="few">%d نتائج</item>
+        <item quantity="many">%d نتيجة</item>
+        <item quantity="other">%d نتيجة</item>
+    </plurals>
+
+    <!-- Exported notes (the text you copy) -->
+    <string name="export_heading">الملاحظات والتمييزات</string>
+    <string name="export_empty">لا توجد ملاحظات أو تمييزات بعد.</string>
+    <string name="export_page">الصفحة %1$d</string>
+    <string name="export_separator">"، "</string>
+    <string name="export_note">ملاحظة</string>
+    <string name="export_highlight">تمييز</string>
+
+    <!-- Settings -->
+    <string name="tab_lock">القفل</string>
+    <string name="tab_reading">القراءة</string>
+    <string name="tab_backup">النسخ الاحتياطي</string>
+    <string name="tab_about">حول</string>
+    <string name="sec_focus_lock">قفل التركيز</string>
+    <string name="lock_phone_title">اقفل الهاتف على غرفة القراءة</string>
+    <string name="lock_on_hint">مفعّل. إيقافه يتطلب رمز PIN.</string>
+    <string name="lock_off_hint">متوقف. التطبيقات الأخرى متاحة.</string>
+    <string name="sec_lock_strength">قوة القفل</string>
+    <string name="strength_device">جهاز مقفل</string>
+    <string name="strength_device_body">أقوى قفل. تُحجب الشاشة الرئيسية والتطبيقات الأخيرة والإشعارات، ويعود القفل بعد إعادة التشغيل.</string>
+    <string name="strength_pinning">تثبيت الشاشة</string>
+    <string name="strength_pinning_body">قد يطلب منك Android التأكيد في المرة الأولى. الضغط مطولًا على «رجوع» و«التطبيقات الأخيرة» معًا يلغيه. للحصول على أقوى قفل، اجعل غرفة القراءة «مالك الجهاز» مرة واحدة من حاسوب (أزل حسابات Google من الهاتف أولًا، ويمكنك إعادتها لاحقًا):</string>
+    <string name="sec_exit_pin">رمز PIN للخروج</string>
+    <string name="pin_is_set">تم تعيين رمز PIN من 4 أرقام</string>
+    <string name="pin_is_none">لا يوجد رمز PIN بعد</string>
+    <string name="pin_set_hint">تحتاج إليه لإيقاف القفل.</string>
+    <string name="pin_none_hint">تختار واحدًا عند تفعيل القفل.</string>
+    <string name="change">تغيير</string>
+    <string name="set_pin">تعيين</string>
+    <string name="exit_focus">الخروج من وضع التركيز</string>
+    <string name="sec_daily_goal">الهدف اليومي</string>
+    <string name="goal_title">دقائق القراءة كل يوم</string>
+    <string name="goal_hint">يظهر كشريط في مكتبتك.</string>
+    <string name="minutes_value">%1$d د</string>
+    <string name="sec_page">الصفحة</string>
+    <string name="sec_screen">الشاشة</string>
+    <string name="brightness_hint">أوقفه لضبط سطوع القارئ فقط.</string>
+    <string name="keep_screen_title">إبقاء الشاشة مضاءة أثناء القراءة</string>
+    <string name="keep_screen_hint">لن تنطفئ الشاشة في منتصف الصفحة.</string>
+    <string name="sec_backup_drive">نسخ احتياطي إلى Google Drive</string>
+    <string name="no_backup">لا توجد نسخة احتياطية بعد</string>
+    <string name="last_backup">آخر نسخة احتياطية: %1$s</string>
+    <string name="picker_hint">في نافذة اختيار الملفات، اختر Google Drive.</string>
+    <string name="back_up_now">نسخ احتياطي الآن</string>
+    <string name="restore">استعادة</string>
+    <string name="sec_what_saved">ما الذي يُحفظ</string>
+    <string name="saved_1">الملاحظات والتمييزات، مع الكلمات التي ميّزتها</string>
+    <string name="saved_2">الإشارات المرجعية والصفحة التي توقفت عندها في كل كتاب</string>
+    <string name="saved_3">وقت القراءة والهدف اليومي وإعدادات القراءة</string>
+    <string name="not_saved">لا يُحفظ: ملفات PDF نفسها ورمز PIN والقفل.</string>
+    <string name="sec_new_phone">على هاتف جديد</string>
+    <string name="newphone_1">ثبّت غرفة القراءة وافتح الإعدادات ثم النسخ الاحتياطي</string>
+    <string name="newphone_2">اضغط «استعادة» واختر الملف نفسه من Google Drive</string>
+    <string name="newphone_3">استورد ملفات PDF. يستعيد كل كتاب ملاحظاته، ويُتعرَّف عليه باسمه وعدد صفحاته</string>
+    <string name="sec_waiting">في انتظار ملفات PDF الخاصة بها</string>
+    <string name="and_more">و%d أخرى</string>
+    <string name="waiting_hint">استورد ملفات PDF هذه من المكتبة وستظهر الملاحظات.</string>
+    <plurals name="waiting_books">
+        <item quantity="zero">لا كتب لها ملاحظات محفوظة</item>
+        <item quantity="one">كتاب واحد له ملاحظات محفوظة</item>
+        <item quantity="two">كتابان لهما ملاحظات محفوظة</item>
+        <item quantity="few">%d كتب لها ملاحظات محفوظة</item>
+        <item quantity="many">%d كتابًا لها ملاحظات محفوظة</item>
+        <item quantity="other">%d كتاب لها ملاحظات محفوظة</item>
+    </plurals>
+    <string name="version">الإصدار %1$s</string>
+    <string name="about_tagline">مكان هادئ لقراءة ملفات PDF، مع قفل يُبعد التطبيقات الأخرى.</string>
+    <string name="sec_library">مكتبتك</string>
+    <string name="stat_books">الكتب</string>
+    <string name="stat_notes">الملاحظات والتمييزات</string>
+    <string name="stat_bookmarks">الإشارات المرجعية</string>
+    <string name="stat_time">وقت القراءة</string>
+    <string name="time_hm">%1$d س %2$d د</string>
+    <string name="sec_privacy">الخصوصية</string>
+    <string name="privacy_body">كل شيء يبقى على هذا الهاتف. يقرأ التطبيق فقط ملفات PDF التي تختار استيرادها، ولا يرسل شيئًا إلى أي مكان إلا إذا حفظت أنت نسخة احتياطية في Google Drive.</string>
+</resources>

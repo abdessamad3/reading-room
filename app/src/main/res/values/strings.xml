@@ -1,3 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Reading Room</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="remove">Remove</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="settings">Settings</string>
+    <string name="all_apps">All apps</string>
+    <string name="loading_apps">Loading apps…</string>
+
+    <!-- PIN -->
+    <string name="pin_enter_title">Enter your PIN</string>
+    <string name="pin_enter_subtitle">The lock turns off and your other apps come back.</string>
+    <string name="pin_wrong">Wrong PIN. Try again.</string>
+    <string name="lock_off_msg">Focus lock is off.</string>
+    <string name="pin_choose_title">Choose a 4-digit PIN</string>
+    <string name="pin_choose_subtitle">You will need it to turn the lock off. Pick one you will remember.</string>
+    <string name="pin_saved_lock_on">PIN saved. Focus lock is on.</string>
+    <string name="pin_current_title">Enter your current PIN</string>
+    <string name="pin_current_subtitle">Then you can choose a new one.</string>
+    <string name="pin_new_title">Choose a new PIN</string>
+    <string name="pin_new_subtitle">4 digits.</string>
+    <string name="pin_changed">PIN changed.</string>
+    <string name="pin_again">Type it once more</string>
+    <string name="pin_mismatch">The two PINs did not match. Start again.</string>
+    <string name="pin_digits_entered">%1$d of %2$d digits entered</string>
+
+    <!-- Importing and backup messages -->
+    <string name="untitled">Untitled</string>
+    <string name="import_failed_all">That file could not be opened as a PDF.</string>
+    <string name="import_partial">Added %1$d, but %2$d could not be opened.</string>
+    <string name="import_added_notes">Added %1$d and brought back your saved notes.</string>
+    <string name="import_already">Already in your library.</string>
+    <string name="backup_saved">Backup saved. It holds your notes, highlights and reading place, not the PDFs.</string>
+    <string name="backup_failed">The backup could not be saved. Try another location.</string>
+    <string name="restore_invalid">That file is not a Reading Room backup.</string>
+
+    <plurals name="import_added">
+        <item quantity="one">Added %d PDF.</item>
+        <item quantity="other">Added %d PDFs.</item>
+    </plurals>
+    <plurals name="restore_done">
+        <item quantity="one">Restored %d book.</item>
+        <item quantity="other">Restored %d books.</item>
+    </plurals>
+    <plurals name="restore_waiting">
+        <item quantity="one">%d more book will get its notes when you import its PDF.</item>
+        <item quantity="other">%d more books will get their notes when you import those PDFs.</item>
+    </plurals>
+
+    <!-- Library -->
+    <string name="focus_lock_on">Focus lock on</string>
+    <string name="focus_lock_off_title">Focus lock is off</string>
+    <string name="focus_lock_off_body">Your other apps are reachable. Turn the lock on to keep only your PDFs in front of you.</string>
+    <string name="turn_lock_on">Turn lock on</string>
+    <string name="todays_reading">Today\'s reading</string>
+    <string name="minutes_of">%1$d of %2$d min</string>
+    <string name="streak_none">No streak yet</string>
+    <string name="goal_reached">Goal reached</string>
+    <string name="min_to_go">%d min to go</string>
+    <string name="continue_reading">Continue reading</string>
+    <string name="page_of">Page %1$d of %2$d</string>
+    <string name="your_pdfs">Your PDFs</string>
+    <string name="library_empty">Nothing here yet. Tap Import PDF and pick the files you want to read.</string>
+    <string name="import_pdf">Import PDF</string>
+    <string name="remove_title">Remove from library?</string>
+    <string name="remove_body">“%1$s” is removed from Reading Room. The file itself is not deleted.</string>
+    <string name="remove_from_library">Remove from library</string>
+    <string name="more_options">More options for %1$s</string>
+    <string name="book_info">%1$s · %2$d%% read</string>
+    <plurals name="streak_days">
+        <item quantity="one">%d-day streak</item>
+        <item quantity="other">%d-day streak</item>
+    </plurals>
+    <plurals name="files_count">
+        <item quantity="one">%d file</item>
+        <item quantity="other">%d files</item>
+    </plurals>
+    <plurals name="book_pages">
+        <item quantity="one">%d page</item>
+        <item quantity="other">%d pages</item>
+    </plurals>
+
+    <!-- Reader -->
+    <string name="cd_back_library">Back to library</string>
+    <string name="cd_search">Search in this PDF</string>
+    <string name="cd_notes">Notes and highlights, %1$d so far</string>
+    <string name="bookmark_remove">Remove bookmark</string>
+    <string name="bookmark_add">Bookmark this page</string>
+    <string name="cd_reading_settings">Reading settings</string>
+    <string name="pdf_open_failed">This PDF could not be opened.</string>
+    <string name="pdf_open_failed_hint">It may have been moved, deleted or protected with a password.</string>
+    <string name="last_page">You reached the last page.</string>
+    <string name="first_page">This is the first page.</string>
+    <string name="highlight_added_hint">Highlight added. Tap it to add a note or change its color.</string>
+    <string name="no_text_page">No selectable text on this page. It may be a scan.</string>
+    <string name="note_deleted">Note deleted.</string>
+    <string name="highlight_deleted">Highlight deleted.</string>
+    <string name="copied">Copied.</string>
+    <string name="copied_notes">Notes copied. Paste them into any app.</string>
+    <string name="session_time">This session %1$d:%2$02d</string>
+    <string name="cd_page">Page %1$d</string>
+    <string name="page_color">Page color</string>
+    <string name="theme_paper">Paper</string>
+    <string name="theme_sepia">Sepia</string>
+    <string name="theme_night">Night</string>
+    <string name="zoom">Zoom</string>
+    <string name="match_brightness">Match phone brightness</string>
+    <string name="keep_screen_on">Keep screen on</string>
+
+    <!-- Reader tools -->
+    <string name="tool_read">Read and scroll</string>
+    <string name="tool_note">Add a note</string>
+    <string name="tool_eraser">Eraser</string>
+    <string name="highlighter_cd">%1$s highlighter</string>
+    <string name="hint_selecting">Pick a color to highlight the selection</string>
+    <string name="hint_erase">Tap a mark to delete it</string>
+    <string name="hint_highlight">Drag over the page to highlight</string>
+    <string name="hint_note">Tap where the note goes</string>
+    <string name="hint_read">Press and hold text to select it</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_green">Green</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_pink">Pink</string>
+    <string name="color_label">Color</string>
+
+    <!-- Notes, highlights, selection -->
+    <string name="note_on_page">Note on page %1$d</string>
+    <string name="highlight_on_page">Highlight on page %1$d</string>
+    <string name="your_note">Your note</string>
+    <string name="note_optional">Note (optional)</string>
+    <string name="delete_note">Delete this note</string>
+    <string name="delete_highlight">Delete this highlight</string>
+    <string name="notes_title">Notes and highlights (%1$d)</string>
+    <string name="copy_all">Copy all</string>
+    <string name="notes_empty">Nothing yet. Pick a highlighter color or the note tool in the bottom bar, then mark the page.</string>
+    <string name="page_kind_note">Page %1$d · note</string>
+    <string name="page_kind_highlight">Page %1$d · highlight</string>
+    <string name="cd_delete_note">Delete note on page %1$d</string>
+    <string name="cd_delete_highlight">Delete highlight on page %1$d</string>
+    <string name="cd_highlighted_part">Highlighted part of page %1$d</string>
+    <string name="selecting">Selecting…</string>
+    <string name="cd_copy_selected">Copy selected text</string>
+    <string name="cd_highlight_note">Highlight and add a note</string>
+    <string name="cd_clear_selection">Clear selection</string>
+
+    <!-- Search -->
+    <string name="search_not_ready">Search is not ready yet, or is not available for this PDF (it may be locked).</string>
+    <string name="search_min">Type at least 2 letters.</string>
+    <string name="search_none">No matches. Scanned pages have no searchable text.</string>
+    <string name="search_matches_max">%d+ matches</string>
+    <string name="search_progress">Searching… page %1$d of %2$d</string>
+    <string name="search_clear_marks">Clear search marks on the pages</string>
+    <string name="cd_clear_search">Clear search marks</string>
+    <string name="page_short">p. %1$d</string>
+    <plurals name="search_matches">
+        <item quantity="one">%d match</item>
+        <item quantity="other">%d matches</item>
+    </plurals>
+
+    <!-- Exported notes (the text you copy) -->
+    <string name="export_heading">Notes and highlights</string>
+    <string name="export_empty">No notes or highlights yet.</string>
+    <string name="export_page">Page %1$d</string>
+    <string name="export_separator">", "</string>
+    <string name="export_note">note</string>
+    <string name="export_highlight">highlight</string>
+
+    <!-- Settings -->
+    <string name="tab_lock">Lock</string>
+    <string name="tab_reading">Reading</string>
+    <string name="tab_backup">Backup</string>
+    <string name="tab_about">About</string>
+    <string name="sec_focus_lock">Focus lock</string>
+    <string name="lock_phone_title">Lock the phone to Reading Room</string>
+    <string name="lock_on_hint">On. Turning it off needs your PIN.</string>
+    <string name="lock_off_hint">Off. Other apps are reachable.</string>
+    <string name="sec_lock_strength">Lock strength</string>
+    <string name="strength_device">Locked device</string>
+    <string name="strength_device_body">Strongest lock. Home, Recents and notifications are blocked, and the lock comes back after a restart.</string>
+    <string name="strength_pinning">Screen pinning</string>
+    <string name="strength_pinning_body">Android may ask you to confirm the first time. Holding Back and Recents together undoes it. For the strongest lock, make Reading Room the Device Owner once from a computer (remove Google accounts from the phone first, you can add them back afterwards):</string>
+    <string name="sec_exit_pin">Exit PIN</string>
+    <string name="pin_is_set">A 4-digit PIN is set</string>
+    <string name="pin_is_none">No PIN yet</string>
+    <string name="pin_set_hint">You need it to turn the lock off.</string>
+    <string name="pin_none_hint">You choose one when you turn the lock on.</string>
+    <string name="change">Change</string>
+    <string name="set_pin">Set</string>
+    <string name="exit_focus">Exit focus mode</string>
+    <string name="sec_daily_goal">Daily goal</string>
+    <string name="goal_title">Minutes to read each day</string>
+    <string name="goal_hint">Shown as a bar on your library.</string>
+    <string name="minutes_value">%1$d min</string>
+    <string name="sec_page">Page</string>
+    <string name="sec_screen">Screen</string>
+    <string name="brightness_hint">Turn off to set the brightness for the reader only.</string>
+    <string name="keep_screen_title">Keep screen on while reading</string>
+    <string name="keep_screen_hint">The screen will not go to sleep in the middle of a page.</string>
+    <string name="sec_backup_drive">Back up to Google Drive</string>
+    <string name="no_backup">No backup yet</string>
+    <string name="last_backup">Last backup: %1$s</string>
+    <string name="picker_hint">In the file picker, choose Google Drive.</string>
+    <string name="back_up_now">Back up now</string>
+    <string name="restore">Restore</string>
+    <string name="sec_what_saved">What is saved</string>
+    <string name="saved_1">Notes and highlights, with the words you highlighted</string>
+    <string name="saved_2">Bookmarks and the page you stopped at in each book</string>
+    <string name="saved_3">Reading time, daily goal and reading settings</string>
+    <string name="not_saved">Not saved: the PDF files themselves, your PIN and the lock.</string>
+    <string name="sec_new_phone">On a new phone</string>
+    <string name="newphone_1">Install Reading Room and open Settings, then Backup</string>
+    <string name="newphone_2">Tap Restore and pick the same file from Google Drive</string>
+    <string name="newphone_3">Import your PDFs. Each book gets its notes back, matched by its name and page count</string>
+    <string name="sec_waiting">Waiting for their PDF</string>
+    <string name="and_more">and %d more</string>
+    <string name="waiting_hint">Import these PDFs from the library and the notes appear.</string>
+    <plurals name="waiting_books">
+        <item quantity="one">%d book with saved notes</item>
+        <item quantity="other">%d books with saved notes</item>
+    </plurals>
+    <string name="version">Version %1$s</string>
+    <string name="about_tagline">A quiet place to read your PDFs, with a lock that keeps other apps away.</string>
+    <string name="sec_library">Your library</string>
+    <string name="stat_books">Books</string>
+    <string name="stat_notes">Notes and highlights</string>
+    <string name="stat_bookmarks">Bookmarks</string>
+    <string name="stat_time">Time read</string>
+    <string name="time_hm">%1$d h %2$d min</string>
+    <string name="sec_privacy">Privacy</string>
+    <string name="privacy_body">Everything stays on this phone. The app only reads the PDFs you choose to import, and sends nothing anywhere unless you save a backup file to your Google Drive yourself.</string>
 </resources>

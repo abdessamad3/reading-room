@@ -29,6 +29,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -37,8 +38,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.DateFormat
@@ -47,7 +51,7 @@ import kotlin.math.roundToInt
 
 private const val ADB_COMMAND = "adb shell dpm set-device-owner com.readingroom.app/.AdminReceiver"
 
-private val TABS = listOf("Lock", "Reading", "Backup", "About")
+private val TABS = listOf(R.string.tab_lock, R.string.tab_reading, R.string.tab_backup, R.string.tab_about)
 
 @Composable
 fun SettingsScreen(
@@ -63,12 +67,12 @@ fun SettingsScreen(
 
     Column(Modifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
-            Text("Settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
+            Text(stringResource(R.string.settings), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         }
         TabRow(selectedTabIndex = tab, containerColor = MaterialTheme.colorScheme.background) {
             TABS.forEachIndexed { i, name ->
-                Tab(selected = tab == i, onClick = { tab = i }, text = { Text(name) })
+                Tab(selected = tab == i, onClick = { tab = i }, text = { Text(stringResource(name)) })
             }
         }
         // Each tab scrolls on its own and starts at the top when you switch to it.
@@ -100,49 +104,50 @@ private fun LockTab(
     onChangePin: () -> Unit,
 ) {
     val settings = state.settings
-    Section("Focus lock") {
+    Section(stringResource(R.string.sec_focus_lock)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Lock the phone to Reading Room", fontWeight = FontWeight.Medium)
-                Hint(if (settings.lockEnabled) "On. Turning it off needs your PIN." else "Off. Other apps are reachable.")
+                Text(stringResource(R.string.lock_phone_title), fontWeight = FontWeight.Medium)
+                Hint(stringResource(if (settings.lockEnabled) R.string.lock_on_hint else R.string.lock_off_hint))
             }
             Switch(checked = settings.lockEnabled, onCheckedChange = { if (it) onTurnLockOn() else onTurnLockOff() })
         }
     }
 
-    Section("Lock strength") {
+    Section(stringResource(R.string.sec_lock_strength)) {
         Card {
             when (lock.strength) {
                 LockStrength.LOCKED_DEVICE -> {
-                    Text("Locked device", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.strength_device), fontWeight = FontWeight.SemiBold)
                     Text(
-                        "Strongest lock. Home, Recents and notifications are blocked, and the lock comes back after a restart.",
+                        stringResource(R.string.strength_device_body),
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
                 LockStrength.SCREEN_PINNING -> {
-                    Text("Screen pinning", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.strength_pinning), fontWeight = FontWeight.SemiBold)
                     Text(
-                        "Android may ask you to confirm the first time. Holding Back and Recents together undoes it. " +
-                            "For the strongest lock, make Reading Room the Device Owner once from a computer " +
-                            "(remove Google accounts from the phone first, you can add them back afterwards):",
+                        stringResource(R.string.strength_pinning_body),
                         style = MaterialTheme.typography.bodySmall,
                     )
-                    SelectionContainer {
-                        Text(ADB_COMMAND, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+                    // A command is always typed left to right, even in Arabic.
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        SelectionContainer {
+                            Text(ADB_COMMAND, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
         }
     }
 
-    Section("Exit PIN") {
+    Section(stringResource(R.string.sec_exit_pin)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(if (settings.hasPin) "A 4-digit PIN is set" else "No PIN yet", fontWeight = FontWeight.Medium)
-                Hint(if (settings.hasPin) "You need it to turn the lock off." else "You choose one when you turn the lock on.")
+                Text(stringResource(if (settings.hasPin) R.string.pin_is_set else R.string.pin_is_none), fontWeight = FontWeight.Medium)
+                Hint(stringResource(if (settings.hasPin) R.string.pin_set_hint else R.string.pin_none_hint))
             }
-            TextButton(onClick = onChangePin) { Text(if (settings.hasPin) "Change" else "Set") }
+            TextButton(onClick = onChangePin) { Text(stringResource(if (settings.hasPin) R.string.change else R.string.set_pin)) }
         }
     }
 
@@ -151,7 +156,7 @@ private fun LockTab(
             onClick = onTurnLockOff,
             modifier = Modifier.fillMaxWidth(),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
-        ) { Text("Exit focus mode", color = MaterialTheme.colorScheme.error) }
+        ) { Text(stringResource(R.string.exit_focus), color = MaterialTheme.colorScheme.error) }
     }
 }
 
@@ -159,23 +164,23 @@ private fun LockTab(
 
 @Composable
 private fun ReadingTab(settings: Settings, viewModel: AppViewModel) {
-    Section("Daily goal") {
+    Section(stringResource(R.string.sec_daily_goal)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Minutes to read each day", fontWeight = FontWeight.Medium)
-                Hint("Shown as a bar on your library.")
+                Text(stringResource(R.string.goal_title), fontWeight = FontWeight.Medium)
+                Hint(stringResource(R.string.goal_hint))
             }
             TextButton(onClick = { viewModel.setGoal(settings.goalMinutes - 5) }, enabled = settings.goalMinutes > 5) { Text("−") }
-            Text("${settings.goalMinutes} min", fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.minutes_value, settings.goalMinutes), fontWeight = FontWeight.SemiBold)
             TextButton(onClick = { viewModel.setGoal(settings.goalMinutes + 5) }, enabled = settings.goalMinutes < 240) { Text("+") }
         }
     }
 
-    Section("Page") {
-        Text("Page color", fontWeight = FontWeight.Medium)
+    Section(stringResource(R.string.sec_page)) {
+        Text(stringResource(R.string.page_color), fontWeight = FontWeight.Medium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ReaderTheme.entries.forEach { t ->
-                val label = t.name.lowercase().replaceFirstChar { it.uppercase() }
+                val label = stringResource(t.labelRes)
                 if (t == settings.theme) {
                     Button(onClick = { viewModel.setTheme(t) }) { Text(label) }
                 } else {
@@ -184,18 +189,18 @@ private fun ReadingTab(settings: Settings, viewModel: AppViewModel) {
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Zoom", Modifier.weight(1f), fontWeight = FontWeight.Medium)
+            Text(stringResource(R.string.zoom), Modifier.weight(1f), fontWeight = FontWeight.Medium)
             TextButton(onClick = { viewModel.setZoom(settings.zoom - 0.25f) }, enabled = settings.zoom > 1f) { Text("−") }
             Text("${(settings.zoom * 100).roundToInt()}%", fontWeight = FontWeight.SemiBold)
             TextButton(onClick = { viewModel.setZoom(settings.zoom + 0.25f) }, enabled = settings.zoom < 3f) { Text("+") }
         }
     }
 
-    Section("Screen") {
+    Section(stringResource(R.string.sec_screen)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Match phone brightness", fontWeight = FontWeight.Medium)
-                Hint("Turn off to set the brightness for the reader only.")
+                Text(stringResource(R.string.match_brightness), fontWeight = FontWeight.Medium)
+                Hint(stringResource(R.string.brightness_hint))
             }
             Switch(
                 checked = settings.brightness < 0f,
@@ -211,8 +216,8 @@ private fun ReadingTab(settings: Settings, viewModel: AppViewModel) {
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Keep screen on while reading", fontWeight = FontWeight.Medium)
-                Hint("The screen will not go to sleep in the middle of a page.")
+                Text(stringResource(R.string.keep_screen_title), fontWeight = FontWeight.Medium)
+                Hint(stringResource(R.string.keep_screen_hint))
             }
             Switch(checked = settings.keepAwake, onCheckedChange = { viewModel.setKeepAwake(it) })
         }
@@ -231,43 +236,46 @@ private fun BackupTab(state: AppState, viewModel: AppViewModel) {
         if (uri != null) viewModel.restoreBackup(uri)
     }
 
-    Section("Back up to Google Drive") {
+    Section(stringResource(R.string.sec_backup_drive)) {
         Card {
             Text(
-                if (settings.lastBackupAt == 0L) "No backup yet"
-                else "Last backup: ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(settings.lastBackupAt))}",
+                if (settings.lastBackupAt == 0L) stringResource(R.string.no_backup)
+                else stringResource(
+                    R.string.last_backup,
+                    DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(settings.lastBackupAt)),
+                ),
                 fontWeight = FontWeight.SemiBold,
             )
-            Hint("In the file picker, choose Google Drive.")
+            Hint(stringResource(R.string.picker_hint))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { saveBackup.launch(viewModel.backupFileName()) }) { Text("Back up now") }
+            Button(onClick = { saveBackup.launch(viewModel.backupFileName()) }) { Text(stringResource(R.string.back_up_now)) }
             OutlinedButton(
                 onClick = { openBackup.launch(arrayOf("application/json", "application/octet-stream", "text/plain", "*/*")) },
-            ) { Text("Restore") }
+            ) { Text(stringResource(R.string.restore)) }
         }
     }
 
-    Section("What is saved") {
-        Bullet("Notes and highlights, with the words you highlighted")
-        Bullet("Bookmarks and the page you stopped at in each book")
-        Bullet("Reading time, daily goal and reading settings")
-        Hint("Not saved: the PDF files themselves, your PIN and the lock.")
+    Section(stringResource(R.string.sec_what_saved)) {
+        Bullet(stringResource(R.string.saved_1))
+        Bullet(stringResource(R.string.saved_2))
+        Bullet(stringResource(R.string.saved_3))
+        Hint(stringResource(R.string.not_saved))
     }
 
-    Section("On a new phone") {
-        Bullet("Install Reading Room and open Settings, then Backup")
-        Bullet("Tap Restore and pick the same file from Google Drive")
-        Bullet("Import your PDFs. Each book gets its notes back, matched by its name and page count")
+    Section(stringResource(R.string.sec_new_phone)) {
+        Bullet(stringResource(R.string.newphone_1))
+        Bullet(stringResource(R.string.newphone_2))
+        Bullet(stringResource(R.string.newphone_3))
     }
 
     if (state.pending.isNotEmpty()) {
-        Section("Waiting for their PDF") {
+        Section(stringResource(R.string.sec_waiting)) {
             Card {
-                Text("${state.pending.size} book${if (state.pending.size == 1) "" else "s"} with saved notes", fontWeight = FontWeight.SemiBold)
+                Text(LocalContext.current.resources.getQuantityString(R.plurals.waiting_books, state.pending.size, state.pending.size), fontWeight = FontWeight.SemiBold)
                 state.pending.take(8).forEach { Text(it.title, style = MaterialTheme.typography.bodySmall) }
-                if (state.pending.size > 8) Hint("and ${state.pending.size - 8} more")
-                Hint("Import these PDFs from the library and the notes appear.")
+                if (state.pending.size > 8) Hint(stringResource(R.string.and_more, state.pending.size - 8))
+                Hint(stringResource(R.string.waiting_hint))
             }
         }
     }
@@ -285,28 +293,27 @@ private fun AboutTab(state: AppState) {
     val bookmarks = state.books.sumOf { it.bookmarks.size }
     val minutes = state.readingLog.values.sum() / 60
 
-    Section("Reading Room") {
+    Section(stringResource(R.string.app_name)) {
         Card {
-            Text("Version $version", fontWeight = FontWeight.SemiBold)
-            Hint("A quiet place to read your PDFs, with a lock that keeps other apps away.")
+            Text(stringResource(R.string.version, version), fontWeight = FontWeight.SemiBold)
+            Hint(stringResource(R.string.about_tagline))
         }
     }
 
-    Section("Your library") {
+    Section(stringResource(R.string.sec_library)) {
         Card {
-            StatRow("Books", state.books.size.toString())
-            StatRow("Notes and highlights", notes.toString())
-            StatRow("Bookmarks", bookmarks.toString())
-            StatRow("Time read", if (minutes >= 60) "${minutes / 60} h ${minutes % 60} min" else "$minutes min")
+            StatRow(stringResource(R.string.stat_books), state.books.size.toString())
+            StatRow(stringResource(R.string.stat_notes), notes.toString())
+            StatRow(stringResource(R.string.stat_bookmarks), bookmarks.toString())
+            StatRow(
+                stringResource(R.string.stat_time),
+                if (minutes >= 60) stringResource(R.string.time_hm, minutes / 60, minutes % 60) else stringResource(R.string.minutes_value, minutes),
+            )
         }
     }
 
-    Section("Privacy") {
-        Text(
-            "Everything stays on this phone. The app only reads the PDFs you choose to import, and sends nothing anywhere " +
-                "unless you save a backup file to your Google Drive yourself.",
-            style = MaterialTheme.typography.bodyMedium,
-        )
+    Section(stringResource(R.string.sec_privacy)) {
+        Text(stringResource(R.string.privacy_body), style = MaterialTheme.typography.bodyMedium)
     }
 }
 

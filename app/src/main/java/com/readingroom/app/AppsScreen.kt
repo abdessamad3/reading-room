@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
@@ -58,12 +59,12 @@ fun AppsScreen(onBack: () -> Unit) {
 
     Column(Modifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
-            Text("All apps", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
+            Text(stringResource(R.string.all_apps), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         }
         val list = apps
         if (list == null) {
-            Text("Loading apps…", Modifier.padding(18.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.loading_apps), Modifier.padding(18.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             LazyColumn(Modifier.fillMaxSize()) {
                 items(list, key = { it.packageName }) { app ->

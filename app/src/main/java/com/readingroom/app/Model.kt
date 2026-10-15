@@ -1,20 +1,25 @@
 package com.readingroom.app
 
+import androidx.annotation.StringRes
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.LocalDate
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
-enum class ReaderTheme { PAPER, SEPIA, NIGHT }
+enum class ReaderTheme(@StringRes val labelRes: Int) {
+    PAPER(R.string.theme_paper),
+    SEPIA(R.string.theme_sepia),
+    NIGHT(R.string.theme_night),
+}
 
 enum class AnnotationKind { HIGHLIGHT, NOTE }
 
-enum class MarkColor(val label: String, val argb: Long) {
-    YELLOW("Yellow", 0xFFFFD83A),
-    GREEN("Green", 0xFF6FD186),
-    BLUE("Blue", 0xFF6FB1FF),
-    PINK("Pink", 0xFFFF8FBF),
+enum class MarkColor(@StringRes val labelRes: Int, val argb: Long) {
+    YELLOW(R.string.color_yellow, 0xFFFFD83A),
+    GREEN(R.string.color_green, 0xFF6FD186),
+    BLUE(R.string.color_blue, 0xFF6FB1FF),
+    PINK(R.string.color_pink, 0xFFFF8FBF),
 }
 
 /**
@@ -58,25 +63,36 @@ data class Annotation(
     }
 }
 
+/** The words used in the copied notes text. The defaults are English; the app passes the phone's language. */
+data class ExportLabels(
+    val heading: String = "Notes and highlights",
+    val empty: String = "No notes or highlights yet.",
+    val page: (Int) -> String = { "Page $it" },
+    val note: String = "note",
+    val highlight: String = "highlight",
+    val separator: String = ", ",
+    val color: (MarkColor) -> String = { it.name.lowercase() },
+)
+
 object NotesExport {
     /** Plain text of every note and highlight, in reading order, for copying out of the app. */
-    fun format(title: String, annotations: List<Annotation>): String {
-        if (annotations.isEmpty()) return "$title\n\nNo notes or highlights yet."
+    fun format(title: String, annotations: List<Annotation>, labels: ExportLabels = ExportLabels()): String {
+        if (annotations.isEmpty()) return "$title\n\n${labels.empty}"
         val body = annotations
             .sortedWith(compareBy({ it.page }, { it.top }, { it.left }))
             .joinToString("\n\n") { a ->
                 val label = when (a.kind) {
-                    AnnotationKind.NOTE -> "note"
-                    AnnotationKind.HIGHLIGHT -> "highlight, ${a.color.label.lowercase()}"
+                    AnnotationKind.NOTE -> labels.note
+                    AnnotationKind.HIGHLIGHT -> "${labels.highlight}${labels.separator}${labels.color(a.color)}"
                 }
-                val header = "Page ${a.page + 1} ($label)"
+                val header = "${labels.page(a.page + 1)} ($label)"
                 listOfNotNull(
                     header,
                     a.quote.trim().takeIf { it.isNotEmpty() }?.let { "\u201C$it\u201D" },
                     a.text.trim().takeIf { it.isNotEmpty() },
                 ).joinToString("\n")
             }
-        return "$title\nNotes and highlights\n\n$body"
+        return "$title\n${labels.heading}\n\n$body"
     }
 }
 

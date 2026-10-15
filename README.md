@@ -11,6 +11,10 @@ An Android app that turns a phone into a quiet place to read PDFs. It becomes th
 
 Highlights are drawn over the page picture, so they mark an area rather than selected words. Search, table of contents and dictionary lookup need text extraction, which Android's built-in PDF renderer does not offer.
 
+## Languages
+
+English, Arabic and French. The app follows the phone's language automatically, and Arabic switches the layout to right-to-left. On Android 13 and newer the language can also be set per app in the phone's settings. Texts live in `app/src/main/res/values*/strings.xml`; a unit test checks that all three files stay in step.
+
 ## How the lock works
 
 | Mode | Setup | What it does |

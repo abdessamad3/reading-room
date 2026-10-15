@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,11 +25,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -52,9 +56,11 @@ fun PinScreen(
     var entry by rememberSaveable { mutableStateOf("") }
     var first by rememberSaveable { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
+    val enteredDescription = stringResource(R.string.pin_digits_entered, entry.length, PIN_LENGTH)
+    val mismatch = stringResource(R.string.pin_mismatch)
 
     val heading = when {
-        mode == PinMode.CREATE && first != null -> "Type it once more"
+        mode == PinMode.CREATE && first != null -> stringResource(R.string.pin_again)
         else -> title
     }
 
@@ -71,7 +77,7 @@ fun PinScreen(
             first == typed -> error = onDone(typed)
             else -> {
                 first = null
-                error = "The two PINs did not match. Start again."
+                error = mismatch
             }
         }
     }
@@ -90,7 +96,7 @@ fun PinScreen(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(24.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.semantics { contentDescription = "${entry.length} of $PIN_LENGTH digits entered" }) {
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.semantics { contentDescription = enteredDescription }) {
             repeat(PIN_LENGTH) { i ->
                 val on = i < entry.length
                 Box(
@@ -103,18 +109,22 @@ fun PinScreen(
         }
         Spacer(Modifier.height(28.dp))
         val rows = listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"))
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            rows.forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { row.forEach { Key(it) { press(it) } } }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Key("⌫", label = "Delete") { entry = entry.dropLast(1) }
-                Key("0") { press("0") }
-                Spacer(Modifier.size(64.dp))
+        val deleteLabel = stringResource(R.string.delete)
+        // A keypad reads 1-2-3 from left to right in every language, including Arabic.
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                rows.forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { row.forEach { Key(it) { press(it) } } }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Key("⌫", label = deleteLabel) { entry = entry.dropLast(1) }
+                    Key("0") { press("0") }
+                    Spacer(Modifier.size(64.dp))
+                }
             }
         }
         Spacer(Modifier.height(12.dp))
-        TextButton(onClick = onCancel) { Text("Cancel") }
+        TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) }
     }
 }
 

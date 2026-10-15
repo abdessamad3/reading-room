@@ -1,6 +1,7 @@
 package com.readingroom.app
 
 import android.app.Application
+import androidx.annotation.StringRes
 import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -41,6 +42,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
+    private fun str(@StringRes id: Int, vararg args: Any): String = getApplication<Application>().getString(id, *args)
+
+    private fun plural(id: Int, n: Int): String = getApplication<Application>().resources.getQuantityString(id, n, n)
+
     fun go(screen: Screen) {
         _screen.value = screen
     }
@@ -77,12 +82,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             showMessage(
                 when {
-                    failed > 0 && added == 0 -> "That file could not be opened as a PDF."
-                    failed > 0 -> "Added $added, but $failed could not be opened."
-                    added > 0 && restoredNotes > 0 ->
-                        "Added $added PDF${if (added == 1) "" else "s"} and brought back $restoredNotes saved note${if (restoredNotes == 1) "" else "s"}."
-                    added > 0 -> "Added $added PDF${if (added == 1) "" else "s"}."
-                    else -> "Already in your library."
+                    failed > 0 && added == 0 -> str(R.string.import_failed_all)
+                    failed > 0 -> str(R.string.import_partial, added, failed)
+                    added > 0 && restoredNotes > 0 -> str(R.string.import_added_notes, added)
+                    added > 0 -> plural(R.plurals.import_added, added)
+                    else -> str(R.string.import_already)
                 },
             )
         }
@@ -98,7 +102,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
             if (c.moveToFirst()) name = c.getString(0)
         }
-        val title = (name ?: "Untitled").removeSuffix(".pdf").removeSuffix(".PDF").replace('_', ' ')
+        val title = (name ?: str(R.string.untitled)).removeSuffix(".pdf").removeSuffix(".PDF").replace('_', ' ')
         return Book(
             id = UUID.randomUUID().toString(),
             title = title,
@@ -171,9 +175,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             if (ok) {
                 change { it.copy(settings = it.settings.copy(lastBackupAt = now)) }
-                showMessage("Backup saved. It holds your notes, highlights and reading place, not the PDFs.")
+                showMessage(str(R.string.backup_saved))
             } else {
-                showMessage("The backup could not be saved. Try another location.")
+                showMessage(str(R.string.backup_failed))
             }
         }
     }
@@ -207,16 +211,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             val backup = text?.let { BackupCodec.fromJson(it) }
             if (backup == null) {
-                showMessage("That file is not a Reading Room backup.")
+                showMessage(str(R.string.restore_invalid))
                 return@launch
             }
             val result = BackupCodec.restore(_state.value, backup)
             change { result.state }
             showMessage(
                 buildString {
-                    append("Restored ${result.matched} book${if (result.matched == 1) "" else "s"}.")
+                    append(plural(R.plurals.restore_done, result.matched))
                     if (result.waiting > 0) {
-                        append(" ${result.waiting} more will get their notes when you import those PDFs.")
+                        append(" ")
+                        append(plural(R.plurals.restore_waiting, result.waiting))
                     }
                 },
             )

@@ -74,6 +74,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -104,6 +105,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -112,6 +115,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -186,6 +190,15 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
     val colors = palette(settings.theme)
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val exportLabels = ExportLabels(
+        heading = stringResource(R.string.export_heading),
+        empty = stringResource(R.string.export_empty),
+        page = { n -> context.getString(R.string.export_page, n) },
+        note = stringResource(R.string.export_note),
+        highlight = stringResource(R.string.export_highlight),
+        separator = stringResource(R.string.export_separator),
+        color = { c -> context.getString(c.labelRes).lowercase() },
+    )
 
     var doc by remember(book.uri) { mutableStateOf<PdfDoc?>(null) }
     var failed by remember(book.uri) { mutableStateOf(false) }
@@ -282,7 +295,7 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
     fun turn(delta: Int) {
         val target = (pagerState.currentPage + delta).coerceIn(0, lastIndex)
         if (target == pagerState.currentPage) {
-            viewModel.showMessage(if (delta > 0) "You reached the last page." else "This is the first page.")
+            viewModel.showMessage(context.getString(if (delta > 0) R.string.last_page else R.string.first_page))
         } else {
             scope.launch { pagerState.animateScrollToPage(target) }
         }
@@ -335,15 +348,15 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("This PDF could not be opened.", color = colors.foreground, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.pdf_open_failed), color = colors.foreground, fontWeight = FontWeight.SemiBold)
                 Text(
-                    "It may have been moved, deleted or protected with a password.",
+                    stringResource(R.string.pdf_open_failed_hint),
                     color = colors.foreground.copy(alpha = 0.7f),
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = { viewModel.go(Screen.Library) }) { Text("Back") }
-                    Button(onClick = { viewModel.removeBook(bookId); viewModel.go(Screen.Library) }) { Text("Remove") }
+                    OutlinedButton(onClick = { viewModel.go(Screen.Library) }) { Text(stringResource(R.string.back)) }
+                    Button(onClick = { viewModel.removeBook(bookId); viewModel.go(Screen.Library) }) { Text(stringResource(R.string.remove)) }
                 }
             }
 
@@ -368,6 +381,8 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                     }
                 },
             ) {
+                // Pages always turn left to right, so the tap zones and swipes match in every language.
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 HorizontalPager(
                     state = pagerState,
                     userScrollEnabled = zoom <= 1.01f && tool == Tool.READ,
@@ -385,7 +400,7 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                             viewModel.addAnnotation(bookId, newAnnotation(index, AnnotationKind.HIGHLIGHT, l, t, r, b))
                             if (!hintedHighlight) {
                                 hintedHighlight = true
-                                viewModel.showMessage("Highlight added. Tap it to add a note or change its color.")
+                                viewModel.showMessage(context.getString(R.string.highlight_added_hint))
                             }
                         },
                         onNote = { x, y ->
@@ -395,7 +410,9 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                         onOpen = { editing = it; editingIsNew = false },
                         onErase = {
                             viewModel.deleteAnnotation(bookId, it.id)
-                            viewModel.showMessage(if (it.kind == AnnotationKind.NOTE) "Note deleted." else "Highlight deleted.")
+                            viewModel.showMessage(
+                                context.getString(if (it.kind == AnnotationKind.NOTE) R.string.note_deleted else R.string.highlight_deleted),
+                            )
                         },
                         text = text,
                         selection = selection?.takeIf { it.page == index },
@@ -404,10 +421,11 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                         onNoText = {
                             if (!warnedNoText) {
                                 warnedNoText = true
-                                viewModel.showMessage("No selectable text on this page. It may be a scan.")
+                                viewModel.showMessage(context.getString(R.string.no_text_page))
                             }
                         },
                     )
+                }
                 }
             }
         }
@@ -423,7 +441,7 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = { viewModel.go(Screen.Library) }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back to library", tint = colors.foreground)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cd_back_library), tint = colors.foreground)
                 }
                 Text(
                     book.title,
@@ -434,19 +452,19 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 IconButton(onClick = { searchSheet = true }) {
-                    Icon(Icons.Default.Search, "Search in this PDF", tint = colors.foreground)
+                    Icon(Icons.Default.Search, stringResource(R.string.cd_search), tint = colors.foreground)
                 }
                 IconButton(onClick = { notesSheet = true }) {
-                    Icon(Icons.Default.EditNote, "Notes and highlights, ${book.annotations.size} so far", tint = colors.foreground)
+                    Icon(Icons.Default.EditNote, stringResource(R.string.cd_notes, book.annotations.size), tint = colors.foreground)
                 }
                 IconButton(onClick = { viewModel.toggleBookmark(bookId, currentPage) }) {
                     Icon(
                         if (bookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        if (bookmarked) "Remove bookmark" else "Bookmark this page",
+                        stringResource(if (bookmarked) R.string.bookmark_remove else R.string.bookmark_add),
                         tint = if (bookmarked) MaterialTheme.colorScheme.primary else colors.foreground,
                     )
                 }
-                IconButton(onClick = { sheet = true }) { Icon(Icons.Default.TextFields, "Reading settings", tint = colors.foreground) }
+                IconButton(onClick = { sheet = true }) { Icon(Icons.Default.TextFields, stringResource(R.string.cd_reading_settings), tint = colors.foreground) }
             }
         }
 
@@ -463,7 +481,7 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text("\u201C$searchQuery\u201D", color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.labelLarge)
-                Icon(Icons.Default.Close, "Clear search marks", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                Icon(Icons.Default.Close, stringResource(R.string.cd_clear_search), Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         }
 
@@ -483,7 +501,7 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                         onCopy = {
                             val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             cm.setPrimaryClip(ClipData.newPlainText("Selected text", selectedText))
-                            viewModel.showMessage("Copied.")
+                            viewModel.showMessage(context.getString(R.string.copied))
                             selection = null
                         },
                         onNote = { highlightSelection(penColor, thenEdit = true) },
@@ -503,22 +521,24 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                         if (selection != null) highlightSelection(it, thenEdit = false) else tool = Tool.HIGHLIGHT
                     },
                 )
-                Slider(
-                    value = sliding ?: currentPage.toFloat(),
-                    onValueChange = { sliding = it },
-                    onValueChangeFinished = {
-                        val target = (sliding ?: currentPage.toFloat()).roundToInt()
-                        sliding = null
-                        scope.launch { pagerState.scrollToPage(target) }
-                    },
-                    valueRange = 0f..lastIndex.coerceAtLeast(1).toFloat(),
-                    enabled = book.pages > 1,
-                )
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Slider(
+                        value = sliding ?: currentPage.toFloat(),
+                        onValueChange = { sliding = it },
+                        onValueChangeFinished = {
+                            val target = (sliding ?: currentPage.toFloat()).roundToInt()
+                            sliding = null
+                            scope.launch { pagerState.scrollToPage(target) }
+                        },
+                        valueRange = 0f..lastIndex.coerceAtLeast(1).toFloat(),
+                        enabled = book.pages > 1,
+                    )
+                }
                 Row {
                     val shown = (sliding?.roundToInt() ?: currentPage) + 1
-                    Text("Page $shown of ${book.pages}", Modifier.weight(1f), color = colors.foreground.copy(alpha = 0.75f), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.page_of, shown, book.pages), Modifier.weight(1f), color = colors.foreground.copy(alpha = 0.75f), style = MaterialTheme.typography.bodySmall)
                     Text(
-                        "This session ${session / 60}:${"%02d".format(session % 60)}",
+                        stringResource(R.string.session_time, session / 60, session % 60),
                         color = colors.foreground.copy(alpha = 0.75f),
                         style = MaterialTheme.typography.bodySmall,
                     )
@@ -574,12 +594,14 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
             },
             onDelete = {
                 viewModel.deleteAnnotation(bookId, it.id)
-                viewModel.showMessage(if (it.kind == AnnotationKind.NOTE) "Note deleted." else "Highlight deleted.")
+                viewModel.showMessage(
+                    context.getString(if (it.kind == AnnotationKind.NOTE) R.string.note_deleted else R.string.highlight_deleted),
+                )
             },
             onCopy = {
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText("Notes", NotesExport.format(book.title, book.annotations)))
-                viewModel.showMessage("Notes copied. Paste them into any app.")
+                cm.setPrimaryClip(ClipData.newPlainText("Notes", NotesExport.format(book.title, book.annotations, exportLabels)))
+                viewModel.showMessage(context.getString(R.string.copied_notes))
             },
             onDismiss = { notesSheet = false },
         )
@@ -588,10 +610,10 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
     if (sheet) {
         ModalBottomSheet(onDismissRequest = { sheet = false }) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Page color", fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.page_color), fontWeight = FontWeight.SemiBold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ReaderTheme.entries.forEach { t ->
-                        val label = t.name.lowercase().replaceFirstChar { it.uppercase() }
+                        val label = stringResource(t.labelRes)
                         if (t == settings.theme) {
                             Button(onClick = { viewModel.setTheme(t) }) { Text(label) }
                         } else {
@@ -600,13 +622,13 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Zoom", Modifier.weight(1f))
+                    Text(stringResource(R.string.zoom), Modifier.weight(1f))
                     TextButton(onClick = { viewModel.setZoom(zoom - ZOOM_STEP) }, enabled = zoom > 1f) { Text("−") }
                     Text("${(zoom * 100).roundToInt()}%", fontWeight = FontWeight.SemiBold)
                     TextButton(onClick = { viewModel.setZoom(zoom + ZOOM_STEP) }, enabled = zoom < MAX_ZOOM) { Text("+") }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Match phone brightness", Modifier.weight(1f))
+                    Text(stringResource(R.string.match_brightness), Modifier.weight(1f))
                     Switch(
                         checked = settings.brightness < 0f,
                         onCheckedChange = { viewModel.setBrightness(if (it) BRIGHTNESS_SYSTEM else 0.7f) },
@@ -620,7 +642,7 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Keep screen on", Modifier.weight(1f))
+                    Text(stringResource(R.string.keep_screen_on), Modifier.weight(1f))
                     Switch(checked = settings.keepAwake, onCheckedChange = { viewModel.setKeepAwake(it) })
                 }
             }
@@ -642,15 +664,17 @@ private fun ToolRow(
     val accent = MaterialTheme.colorScheme.primary
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         IconButton(onClick = onRead) {
-            Icon(Icons.Default.PanTool, "Read and scroll", tint = if (tool == Tool.READ) accent else foreground)
+            Icon(Icons.Default.PanTool, stringResource(R.string.tool_read), tint = if (tool == Tool.READ) accent else foreground)
         }
         MarkColor.entries.forEach { c ->
             val selected = tool == Tool.HIGHLIGHT && c == color
+            val colorName = stringResource(c.labelRes)
+            val highlighterName = stringResource(R.string.highlighter_cd, colorName)
             Box(
                 Modifier
                     .size(36.dp)
                     .clickable(role = Role.Button) { onColor(c) }
-                    .semantics { contentDescription = "${c.label} highlighter" },
+                    .semantics { contentDescription = highlighterName },
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
@@ -662,18 +686,18 @@ private fun ToolRow(
             }
         }
         IconButton(onClick = onNote) {
-            Icon(Icons.Default.StickyNote2, "Add a note", tint = if (tool == Tool.NOTE) accent else foreground)
+            Icon(Icons.Default.StickyNote2, stringResource(R.string.tool_note), tint = if (tool == Tool.NOTE) accent else foreground)
         }
         IconButton(onClick = onErase) {
-            Icon(Icons.Default.Delete, "Eraser", tint = if (tool == Tool.ERASE) MaterialTheme.colorScheme.error else foreground)
+            Icon(Icons.Default.Delete, stringResource(R.string.tool_eraser), tint = if (tool == Tool.ERASE) MaterialTheme.colorScheme.error else foreground)
         }
         Text(
             when {
-                selecting -> "Pick a color to highlight the selection"
-                tool == Tool.ERASE -> "Tap a mark to delete it"
-                tool == Tool.HIGHLIGHT -> "Drag over the page to highlight"
-                tool == Tool.NOTE -> "Tap where the note goes"
-                else -> "Press and hold text to select it"
+                selecting -> stringResource(R.string.hint_selecting)
+                tool == Tool.ERASE -> stringResource(R.string.hint_erase)
+                tool == Tool.HIGHLIGHT -> stringResource(R.string.hint_highlight)
+                tool == Tool.NOTE -> stringResource(R.string.hint_note)
+                else -> stringResource(R.string.hint_read)
             },
             Modifier.weight(1f),
             color = foreground.copy(alpha = 0.75f),
@@ -723,7 +747,7 @@ private fun PdfPageView(
                 Box(Modifier.width(pageWidth).aspectRatio(bmp.width.toFloat() / bmp.height)) {
                     Image(
                         bitmap = bmp.asImageBitmap(),
-                        contentDescription = "Page ${index + 1}",
+                        contentDescription = stringResource(R.string.cd_page, index + 1),
                         contentScale = ContentScale.FillWidth,
                         colorFilter = filter,
                         modifier = Modifier.fillMaxSize(),
@@ -933,7 +957,7 @@ private fun AnnotationDialog(
     val isNote = initial.kind == AnnotationKind.NOTE
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (isNote) "Note on page ${initial.page + 1}" else "Highlight on page ${initial.page + 1}") },
+        title = { Text(stringResource(if (isNote) R.string.note_on_page else R.string.highlight_on_page, initial.page + 1)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 if (initial.quote.isNotBlank()) {
@@ -948,7 +972,7 @@ private fun AnnotationDialog(
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text(if (isNote) "Your note" else "Note (optional)") },
+                    label = { Text(stringResource(if (isNote) R.string.your_note else R.string.note_optional)) },
                     minLines = 3,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -960,28 +984,29 @@ private fun AnnotationDialog(
                     ) {
                         Icon(Icons.Default.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
                         Text(
-                            if (isNote) " Delete this note" else " Delete this highlight",
+                            " " + stringResource(if (isNote) R.string.delete_note else R.string.delete_highlight),
                             color = MaterialTheme.colorScheme.error,
                         )
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Color", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.color_label), style = MaterialTheme.typography.bodyMedium)
                     MarkColor.entries.forEach { c ->
+                        val colorLabel = stringResource(c.labelRes)
                         Box(
                             Modifier
                                 .size(30.dp)
                                 .background(Color(c.argb), CircleShape)
                                 .then(if (c == color) Modifier.border(2.5.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier)
                                 .clickable(role = Role.RadioButton) { color = c }
-                                .semantics { contentDescription = c.label },
+                                .semantics { contentDescription = colorLabel },
                         )
                     }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onSave(initial.copy(text = text.trim(), color = color)) }) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = { onSave(initial.copy(text = text.trim(), color = color)) }) { Text(stringResource(R.string.save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
@@ -999,15 +1024,15 @@ private fun NotesSheet(
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Notes and highlights (${annotations.size})", Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.notes_title, annotations.size), Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
                 TextButton(onClick = onCopy, enabled = annotations.isNotEmpty()) {
                     Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp))
-                    Text(" Copy all")
+                    Text(" " + stringResource(R.string.copy_all))
                 }
             }
             if (sorted.isEmpty()) {
                 Text(
-                    "Nothing yet. Pick a highlighter color or the note tool in the bottom bar, then mark the page.",
+                    stringResource(R.string.notes_empty),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
@@ -1021,7 +1046,7 @@ private fun NotesSheet(
                             Box(Modifier.padding(top = 4.dp).size(14.dp).background(Color(a.color.argb), CircleShape))
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(
-                                    "Page ${a.page + 1} · ${if (a.kind == AnnotationKind.NOTE) "note" else "highlight"}",
+                                    stringResource(if (a.kind == AnnotationKind.NOTE) R.string.page_kind_note else R.string.page_kind_highlight, a.page + 1),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -1040,7 +1065,7 @@ private fun NotesSheet(
                             IconButton(onClick = { onDelete(a) }) {
                                 Icon(
                                     Icons.Default.Delete,
-                                    "Delete ${if (a.kind == AnnotationKind.NOTE) "note" else "highlight"} on page ${a.page + 1}",
+                                    stringResource(if (a.kind == AnnotationKind.NOTE) R.string.cd_delete_note else R.string.cd_delete_highlight, a.page + 1),
                                     tint = MaterialTheme.colorScheme.error,
                                 )
                             }
@@ -1073,7 +1098,7 @@ private fun HighlightPreview(doc: PdfDoc, a: Annotation) {
     image?.let { bmp ->
         Image(
             bitmap = bmp,
-            contentDescription = "Highlighted part of page ${a.page + 1}",
+            contentDescription = stringResource(R.string.cd_highlighted_part, a.page + 1),
             contentScale = ContentScale.Fit,
             alignment = Alignment.CenterStart,
             modifier = Modifier
@@ -1090,7 +1115,7 @@ private fun HighlightPreview(doc: PdfDoc, a: Annotation) {
 private fun SelectionBar(text: String, foreground: Color, onCopy: () -> Unit, onNote: () -> Unit, onClose: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            if (text.isBlank()) "Selecting\u2026" else text,
+            if (text.isBlank()) stringResource(R.string.selecting) else text,
             Modifier.weight(1f).padding(start = 4.dp),
             color = foreground,
             maxLines = 2,
@@ -1098,9 +1123,9 @@ private fun SelectionBar(text: String, foreground: Color, onCopy: () -> Unit, on
             style = MaterialTheme.typography.bodySmall,
             fontStyle = FontStyle.Italic,
         )
-        IconButton(onClick = onCopy, enabled = text.isNotBlank()) { Icon(Icons.Default.ContentCopy, "Copy selected text", tint = foreground) }
-        IconButton(onClick = onNote, enabled = text.isNotBlank()) { Icon(Icons.Default.StickyNote2, "Highlight and add a note", tint = foreground) }
-        IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Clear selection", tint = foreground) }
+        IconButton(onClick = onCopy, enabled = text.isNotBlank()) { Icon(Icons.Default.ContentCopy, stringResource(R.string.cd_copy_selected), tint = foreground) }
+        IconButton(onClick = onNote, enabled = text.isNotBlank()) { Icon(Icons.Default.StickyNote2, stringResource(R.string.cd_highlight_note), tint = foreground) }
+        IconButton(onClick = onClose) { Icon(Icons.Default.Close, stringResource(R.string.cd_clear_selection), tint = foreground) }
     }
 }
 
@@ -1148,17 +1173,18 @@ private fun SearchSheet(
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
-                label = { Text("Search in this PDF") },
+                label = { Text(stringResource(R.string.cd_search)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
                 when {
-                    text == null -> "Search is not ready yet, or is not available for this PDF (it may be locked)."
-                    trimmed.length < 2 -> "Type at least 2 letters."
-                    finished && results.isEmpty() -> "No matches. Scanned pages have no searchable text."
-                    finished -> "${results.size}${if (results.size >= MAX_SEARCH_RESULTS) "+" else ""} matches"
-                    else -> "Searching\u2026 page $scanned of $pageCount"
+                    text == null -> stringResource(R.string.search_not_ready)
+                    trimmed.length < 2 -> stringResource(R.string.search_min)
+                    finished && results.isEmpty() -> stringResource(R.string.search_none)
+                    finished && results.size >= MAX_SEARCH_RESULTS -> stringResource(R.string.search_matches_max, results.size)
+                    finished -> LocalContext.current.resources.getQuantityString(R.plurals.search_matches, results.size, results.size)
+                    else -> stringResource(R.string.search_progress, scanned, pageCount)
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1170,13 +1196,13 @@ private fun SearchSheet(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable { onJump(r.page, trimmed) }.padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text("p. ${r.page + 1}", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.page_short, r.page + 1), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
                         Text(r.snippet, Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
             if (initialQuery.isNotBlank()) {
-                TextButton(onClick = { onClear(); onDismiss() }) { Text("Clear search marks on the pages") }
+                TextButton(onClick = { onClear(); onDismiss() }) { Text(stringResource(R.string.search_clear_marks)) }
             }
         }
     }

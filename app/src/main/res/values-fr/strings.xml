@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Salle de lecture</string>
+
+    <!-- Common -->
+    <string name="back">Retour</string>
+    <string name="cancel">Annuler</string>
+    <string name="remove">Retirer</string>
+    <string name="save">Enregistrer</string>
+    <string name="delete">Supprimer</string>
+    <string name="settings">Réglages</string>
+    <string name="all_apps">Toutes les applications</string>
+    <string name="loading_apps">Chargement des applications…</string>
+
+    <!-- PIN -->
+    <string name="pin_enter_title">Saisissez votre code PIN</string>
+    <string name="pin_enter_subtitle">Le verrouillage se désactive et vos autres applications reviennent.</string>
+    <string name="pin_wrong">Code PIN incorrect. Réessayez.</string>
+    <string name="lock_off_msg">Le verrouillage de concentration est désactivé.</string>
+    <string name="pin_choose_title">Choisissez un code PIN à 4 chiffres</string>
+    <string name="pin_choose_subtitle">Il vous servira à désactiver le verrouillage. Choisissez un code dont vous vous souviendrez.</string>
+    <string name="pin_saved_lock_on">Code PIN enregistré. Le verrouillage de concentration est activé.</string>
+    <string name="pin_current_title">Saisissez votre code PIN actuel</string>
+    <string name="pin_current_subtitle">Vous pourrez ensuite en choisir un nouveau.</string>
+    <string name="pin_new_title">Choisissez un nouveau code PIN</string>
+    <string name="pin_new_subtitle">4 chiffres.</string>
+    <string name="pin_changed">Code PIN modifié.</string>
+    <string name="pin_again">Saisissez-le une seconde fois</string>
+    <string name="pin_mismatch">Les deux codes PIN ne correspondent pas. Recommencez.</string>
+    <string name="pin_digits_entered">%1$d chiffres saisis sur %2$d</string>
+
+    <!-- Importing and backup messages -->
+    <string name="untitled">Sans titre</string>
+    <string name="import_failed_all">Ce fichier n\'a pas pu être ouvert comme PDF.</string>
+    <string name="import_partial">%1$d ajouté(s), mais %2$d n\'ont pas pu être ouverts.</string>
+    <string name="import_added_notes">%1$d ajouté(s) et vos notes enregistrées ont été retrouvées.</string>
+    <string name="import_already">Déjà dans votre bibliothèque.</string>
+    <string name="backup_saved">Sauvegarde enregistrée. Elle contient vos notes, surlignages et votre position de lecture, pas les PDF.</string>
+    <string name="backup_failed">La sauvegarde n\'a pas pu être enregistrée. Essayez un autre emplacement.</string>
+    <string name="restore_invalid">Ce fichier n\'est pas une sauvegarde de Salle de lecture.</string>
+
+    <plurals name="import_added">
+        <item quantity="one">%d PDF ajouté.</item>
+        <item quantity="other">%d PDF ajoutés.</item>
+    </plurals>
+    <plurals name="restore_done">
+        <item quantity="one">%d livre restauré.</item>
+        <item quantity="other">%d livres restaurés.</item>
+    </plurals>
+    <plurals name="restore_waiting">
+        <item quantity="one">%d autre livre retrouvera ses notes quand vous importerez son PDF.</item>
+        <item quantity="other">%d autres livres retrouveront leurs notes quand vous importerez ces PDF.</item>
+    </plurals>
+
+    <!-- Library -->
+    <string name="focus_lock_on">Verrouillage activé</string>
+    <string name="focus_lock_off_title">Le verrouillage est désactivé</string>
+    <string name="focus_lock_off_body">Vos autres applications sont accessibles. Activez le verrouillage pour ne garder que vos PDF sous les yeux.</string>
+    <string name="turn_lock_on">Activer le verrouillage</string>
+    <string name="todays_reading">Lecture du jour</string>
+    <string name="minutes_of">%1$d sur %2$d min</string>
+    <string name="streak_none">Pas encore de série</string>
+    <string name="goal_reached">Objectif atteint</string>
+    <string name="min_to_go">Encore %d min</string>
+    <string name="continue_reading">Reprendre la lecture</string>
+    <string name="page_of">Page %1$d sur %2$d</string>
+    <string name="your_pdfs">Vos PDF</string>
+    <string name="library_empty">Rien ici pour l\'instant. Touchez Importer un PDF et choisissez les fichiers à lire.</string>
+    <string name="import_pdf">Importer un PDF</string>
+    <string name="remove_title">Retirer de la bibliothèque ?</string>
+    <string name="remove_body">« %1$s » sera retiré de Salle de lecture. Le fichier lui-même n\'est pas supprimé.</string>
+    <string name="remove_from_library">Retirer de la bibliothèque</string>
+    <string name="more_options">Plus d\'options pour %1$s</string>
+    <string name="book_info">%1$s · %2$d %% lu</string>
+    <plurals name="streak_days">
+        <item quantity="one">Série de %d jour</item>
+        <item quantity="other">Série de %d jours</item>
+    </plurals>
+    <plurals name="files_count">
+        <item quantity="one">%d fichier</item>
+        <item quantity="other">%d fichiers</item>
+    </plurals>
+    <plurals name="book_pages">
+        <item quantity="one">%d page</item>
+        <item quantity="other">%d pages</item>
+    </plurals>
+
+    <!-- Reader -->
+    <string name="cd_back_library">Retour à la bibliothèque</string>
+    <string name="cd_search">Rechercher dans ce PDF</string>
+    <string name="cd_notes">Notes et surlignages, %1$d pour l\'instant</string>
+    <string name="bookmark_remove">Retirer le signet</string>
+    <string name="bookmark_add">Ajouter un signet à cette page</string>
+    <string name="cd_reading_settings">Réglages de lecture</string>
+    <string name="pdf_open_failed">Ce PDF n\'a pas pu être ouvert.</string>
+    <string name="pdf_open_failed_hint">Il a peut-être été déplacé, supprimé ou protégé par un mot de passe.</string>
+    <string name="last_page">Vous êtes à la dernière page.</string>
+    <string name="first_page">C\'est la première page.</string>
+    <string name="highlight_added_hint">Surlignage ajouté. Touchez-le pour ajouter une note ou changer sa couleur.</string>
+    <string name="no_text_page">Aucun texte sélectionnable sur cette page. C\'est peut-être un scan.</string>
+    <string name="note_deleted">Note supprimée.</string>
+    <string name="highlight_deleted">Surlignage supprimé.</string>
+    <string name="copied">Copié.</string>
+    <string name="copied_notes">Notes copiées. Collez-les dans n\'importe quelle application.</string>
+    <string name="session_time">Cette séance %1$d:%2$02d</string>
+    <string name="cd_page">Page %1$d</string>
+    <string name="page_color">Couleur de la page</string>
+    <string name="theme_paper">Papier</string>
+    <string name="theme_sepia">Sépia</string>
+    <string name="theme_night">Nuit</string>
+    <string name="zoom">Zoom</string>
+    <string name="match_brightness">Luminosité du téléphone</string>
+    <string name="keep_screen_on">Garder l\'écran allumé</string>
+
+    <!-- Reader tools -->
+    <string name="tool_read">Lire et faire défiler</string>
+    <string name="tool_note">Ajouter une note</string>
+    <string name="tool_eraser">Gomme</string>
+    <string name="highlighter_cd">Surligneur %1$s</string>
+    <string name="hint_selecting">Choisissez une couleur pour surligner la sélection</string>
+    <string name="hint_erase">Touchez une marque pour la supprimer</string>
+    <string name="hint_highlight">Glissez sur la page pour surligner</string>
+    <string name="hint_note">Touchez l\'endroit de la note</string>
+    <string name="hint_read">Appuyez longuement sur le texte pour le sélectionner</string>
+    <string name="color_yellow">Jaune</string>
+    <string name="color_green">Vert</string>
+    <string name="color_blue">Bleu</string>
+    <string name="color_pink">Rose</string>
+    <string name="color_label">Couleur</string>
+
+    <!-- Notes, highlights, selection -->
+    <string name="note_on_page">Note de la page %1$d</string>
+    <string name="highlight_on_page">Surlignage de la page %1$d</string>
+    <string name="your_note">Votre note</string>
+    <string name="note_optional">Note (facultative)</string>
+    <string name="delete_note">Supprimer cette note</string>
+    <string name="delete_highlight">Supprimer ce surlignage</string>
+    <string name="notes_title">Notes et surlignages (%1$d)</string>
+    <string name="copy_all">Tout copier</string>
+    <string name="notes_empty">Rien pour l\'instant. Choisissez une couleur de surligneur ou l\'outil note dans la barre du bas, puis marquez la page.</string>
+    <string name="page_kind_note">Page %1$d · note</string>
+    <string name="page_kind_highlight">Page %1$d · surlignage</string>
+    <string name="cd_delete_note">Supprimer la note de la page %1$d</string>
+    <string name="cd_delete_highlight">Supprimer le surlignage de la page %1$d</string>
+    <string name="cd_highlighted_part">Partie surlignée de la page %1$d</string>
+    <string name="selecting">Sélection…</string>
+    <string name="cd_copy_selected">Copier le texte sélectionné</string>
+    <string name="cd_highlight_note">Surligner et ajouter une note</string>
+    <string name="cd_clear_selection">Effacer la sélection</string>
+
+    <!-- Search -->
+    <string name="search_not_ready">La recherche n\'est pas encore prête ou n\'est pas disponible pour ce PDF (il est peut-être verrouillé).</string>
+    <string name="search_min">Saisissez au moins 2 lettres.</string>
+    <string name="search_none">Aucun résultat. Les pages scannées n\'ont pas de texte à rechercher.</string>
+    <string name="search_matches_max">%d+ résultats</string>
+    <string name="search_progress">Recherche… page %1$d sur %2$d</string>
+    <string name="search_clear_marks">Effacer les marques de recherche sur les pages</string>
+    <string name="cd_clear_search">Effacer les marques de recherche</string>
+    <string name="page_short">p. %1$d</string>
+    <plurals name="search_matches">
+        <item quantity="one">%d résultat</item>
+        <item quantity="other">%d résultats</item>
+    </plurals>
+
+    <!-- Exported notes (the text you copy) -->
+    <string name="export_heading">Notes et surlignages</string>
+    <string name="export_empty">Aucune note ni surlignage pour l\'instant.</string>
+    <string name="export_page">Page %1$d</string>
+    <string name="export_separator">", "</string>
+    <string name="export_note">note</string>
+    <string name="export_highlight">surlignage</string>
+
+    <!-- Settings -->
+    <string name="tab_lock">Verrou</string>
+    <string name="tab_reading">Lecture</string>
+    <string name="tab_backup">Sauvegarde</string>
+    <string name="tab_about">À propos</string>
+    <string name="sec_focus_lock">Verrouillage de concentration</string>
+    <string name="lock_phone_title">Verrouiller le téléphone sur Salle de lecture</string>
+    <string name="lock_on_hint">Activé. Pour le désactiver, il faut votre code PIN.</string>
+    <string name="lock_off_hint">Désactivé. Les autres applications sont accessibles.</string>
+    <string name="sec_lock_strength">Niveau de verrouillage</string>
+    <string name="strength_device">Appareil verrouillé</string>
+    <string name="strength_device_body">Le verrouillage le plus fort. Accueil, Applications récentes et notifications sont bloqués, et le verrouillage revient après un redémarrage.</string>
+    <string name="strength_pinning">Épinglage d\'écran</string>
+    <string name="strength_pinning_body">Android peut vous demander de confirmer la première fois. Maintenir Retour et Applications récentes ensemble l\'annule. Pour le verrouillage le plus fort, faites de Salle de lecture le propriétaire de l\'appareil, une seule fois, depuis un ordinateur (retirez d\'abord les comptes Google du téléphone, vous pourrez les remettre ensuite) :</string>
+    <string name="sec_exit_pin">Code PIN de sortie</string>
+    <string name="pin_is_set">Un code PIN à 4 chiffres est défini</string>
+    <string name="pin_is_none">Pas encore de code PIN</string>
+    <string name="pin_set_hint">Il faut le saisir pour désactiver le verrouillage.</string>
+    <string name="pin_none_hint">Vous en choisissez un en activant le verrouillage.</string>
+    <string name="change">Modifier</string>
+    <string name="set_pin">Définir</string>
+    <string name="exit_focus">Quitter le mode concentration</string>
+    <string name="sec_daily_goal">Objectif quotidien</string>
+    <string name="goal_title">Minutes de lecture par jour</string>
+    <string name="goal_hint">Affiché sous forme de barre dans votre bibliothèque.</string>
+    <string name="minutes_value">%1$d min</string>
+    <string name="sec_page">Page</string>
+    <string name="sec_screen">Écran</string>
+    <string name="brightness_hint">Désactivez pour régler la luminosité du lecteur seulement.</string>
+    <string name="keep_screen_title">Garder l\'écran allumé pendant la lecture</string>
+    <string name="keep_screen_hint">L\'écran ne se mettra pas en veille au milieu d\'une page.</string>
+    <string name="sec_backup_drive">Sauvegarder sur Google Drive</string>
+    <string name="no_backup">Pas encore de sauvegarde</string>
+    <string name="last_backup">Dernière sauvegarde : %1$s</string>
+    <string name="picker_hint">Dans le sélecteur de fichiers, choisissez Google Drive.</string>
+    <string name="back_up_now">Sauvegarder maintenant</string>
+    <string name="restore">Restaurer</string>
+    <string name="sec_what_saved">Ce qui est sauvegardé</string>
+    <string name="saved_1">Notes et surlignages, avec les mots surlignés</string>
+    <string name="saved_2">Signets et page où vous vous êtes arrêté dans chaque livre</string>
+    <string name="saved_3">Temps de lecture, objectif quotidien et réglages de lecture</string>
+    <string name="not_saved">Non sauvegardés : les fichiers PDF eux-mêmes, votre code PIN et le verrouillage.</string>
+    <string name="sec_new_phone">Sur un nouveau téléphone</string>
+    <string name="newphone_1">Installez Salle de lecture, puis ouvrez Réglages, Sauvegarde</string>
+    <string name="newphone_2">Touchez Restaurer et choisissez le même fichier dans Google Drive</string>
+    <string name="newphone_3">Importez vos PDF. Chaque livre retrouve ses notes, reconnu par son nom et son nombre de pages</string>
+    <string name="sec_waiting">En attente de leur PDF</string>
+    <string name="and_more">et %d autres</string>
+    <string name="waiting_hint">Importez ces PDF depuis la bibliothèque et les notes apparaîtront.</string>
+    <plurals name="waiting_books">
+        <item quantity="one">%d livre avec des notes enregistrées</item>
+        <item quantity="other">%d livres avec des notes enregistrées</item>
+    </plurals>
+    <string name="version">Version %1$s</string>
+    <string name="about_tagline">Un endroit calme pour lire vos PDF, avec un verrou qui tient les autres applications à distance.</string>
+    <string name="sec_library">Votre bibliothèque</string>
+    <string name="stat_books">Livres</string>
+    <string name="stat_notes">Notes et surlignages</string>
+    <string name="stat_bookmarks">Signets</string>
+    <string name="stat_time">Temps de lecture</string>
+    <string name="time_hm">%1$d h %2$d min</string>
+    <string name="sec_privacy">Confidentialité</string>
+    <string name="privacy_body">Tout reste sur ce téléphone. L\'application lit uniquement les PDF que vous choisissez d\'importer et n\'envoie rien nulle part, sauf si vous enregistrez vous-même une sauvegarde sur votre Google Drive.</string>
+</resources>

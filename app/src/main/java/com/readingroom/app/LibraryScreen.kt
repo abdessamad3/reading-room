@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -78,6 +79,7 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
     val minutes = ReadingStats.minutesOn(state.readingLog, today)
     val streak = ReadingStats.streak(state.readingLog, today)
     val current = state.books.maxByOrNull { it.lastOpenedAt }?.takeIf { it.lastOpenedAt > 0L }
+    val resources = LocalContext.current.resources
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -87,15 +89,15 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Reading Room", style = MaterialTheme.typography.headlineSmall, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold)
                     if (settings.lockEnabled) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Lock, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.width(14.dp))
-                            Text(" Focus lock on", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(" " + stringResource(R.string.focus_lock_on), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
-                IconButton(onClick = { viewModel.go(Screen.Settings) }) { Icon(Icons.Default.Settings, "Settings") }
+                IconButton(onClick = { viewModel.go(Screen.Settings) }) { Icon(Icons.Default.Settings, stringResource(R.string.settings)) }
             }
         }
 
@@ -103,15 +105,15 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
             item {
                 Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.primaryContainer) {
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Focus lock is off", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text(stringResource(R.string.focus_lock_off_title), fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                         Text(
-                            "Your other apps are reachable. Turn the lock on to keep only your PDFs in front of you.",
+                            stringResource(R.string.focus_lock_off_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = onLockOn) { Text("Turn lock on") }
-                            OutlinedButton(onClick = { viewModel.go(Screen.Apps) }) { Text("All apps") }
+                            Button(onClick = onLockOn) { Text(stringResource(R.string.turn_lock_on)) }
+                            OutlinedButton(onClick = { viewModel.go(Screen.Apps) }) { Text(stringResource(R.string.all_apps)) }
                         }
                     }
                 }
@@ -122,8 +124,8 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
             Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
                 Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row {
-                        Text("Today's reading", Modifier.weight(1f))
-                        Text("$minutes of ${settings.goalMinutes} min", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.todays_reading), Modifier.weight(1f))
+                        Text(stringResource(R.string.minutes_of, minutes, settings.goalMinutes), fontWeight = FontWeight.SemiBold)
                     }
                     LinearProgressIndicator(
                         progress = { (minutes.toFloat() / settings.goalMinutes).coerceIn(0f, 1f) },
@@ -131,13 +133,13 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
                     )
                     Row {
                         Text(
-                            if (streak == 0) "No streak yet" else "$streak-day streak",
+                            if (streak == 0) stringResource(R.string.streak_none) else resources.getQuantityString(R.plurals.streak_days, streak, streak),
                             Modifier.weight(1f),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            if (minutes >= settings.goalMinutes) "Goal reached" else "${settings.goalMinutes - minutes} min to go",
+                            if (minutes >= settings.goalMinutes) stringResource(R.string.goal_reached) else stringResource(R.string.min_to_go, settings.goalMinutes - minutes),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -157,9 +159,9 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
                     Row(Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         BookCover(current, Modifier.width(56.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("CONTINUE READING", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.continue_reading).uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(current.title, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            Text("Page ${current.lastPage + 1} of ${current.pages}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.page_of, current.lastPage + 1, current.pages), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             LinearProgressIndicator(progress = { current.progress }, modifier = Modifier.fillMaxWidth())
                         }
                     }
@@ -169,9 +171,9 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
 
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Your PDFs", Modifier.weight(1f), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.your_pdfs), Modifier.weight(1f), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "${state.books.size} file${if (state.books.size == 1) "" else "s"}",
+                    resources.getQuantityString(R.plurals.files_count, state.books.size, state.books.size),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -181,7 +183,7 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
         if (state.books.isEmpty()) {
             item {
                 Text(
-                    "Nothing here yet. Tap Import PDF and pick the files you want to read.",
+                    stringResource(R.string.library_empty),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -194,7 +196,7 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
         item {
             OutlinedButton(onClick = { picker.launch(arrayOf("application/pdf")) }, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Default.Add, null)
-                Text(" Import PDF")
+                Text(" " + stringResource(R.string.import_pdf))
             }
             Spacer(Modifier.height(12.dp))
         }
@@ -203,12 +205,12 @@ fun LibraryScreen(viewModel: AppViewModel, onLockOn: () -> Unit) {
     removing?.let { book ->
         AlertDialog(
             onDismissRequest = { removing = null },
-            title = { Text("Remove from library?") },
-            text = { Text("\"${book.title}\" is removed from Reading Room. The file itself is not deleted.") },
+            title = { Text(stringResource(R.string.remove_title)) },
+            text = { Text(stringResource(R.string.remove_body, book.title)) },
             confirmButton = {
-                TextButton(onClick = { viewModel.removeBook(book.id); removing = null }) { Text("Remove") }
+                TextButton(onClick = { viewModel.removeBook(book.id); removing = null }) { Text(stringResource(R.string.remove)) }
             },
-            dismissButton = { TextButton(onClick = { removing = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { removing = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }
@@ -225,15 +227,19 @@ private fun BookRow(book: Book, onOpen: () -> Unit, onRemove: () -> Unit) {
         Column(Modifier.weight(1f)) {
             Text(book.title, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
-                "${book.pages} pages · ${(book.progress * 100).roundToInt()}% read",
+                stringResource(
+                    R.string.book_info,
+                    LocalContext.current.resources.getQuantityString(R.plurals.book_pages, book.pages, book.pages),
+                    (book.progress * 100).roundToInt(),
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Box {
-            IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "More options for ${book.title}") }
+            IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.more_options, book.title)) }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(text = { Text("Remove from library") }, onClick = { menu = false; onRemove() })
+                DropdownMenuItem(text = { Text(stringResource(R.string.remove_from_library)) }, onClick = { menu = false; onRemove() })
             }
         }
     }

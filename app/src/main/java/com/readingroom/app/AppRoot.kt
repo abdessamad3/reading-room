@@ -17,6 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /** The steps of each flow that asks for a PIN. */
@@ -85,54 +87,56 @@ fun AppRoot(viewModel: AppViewModel, lock: LockController) {
 
 @Composable
 private fun PinFlowScreen(flow: PinFlow, vm: AppViewModel, onClose: () -> Unit, onNext: (PinFlow) -> Unit) {
+    val context = LocalContext.current
+    val wrongPin = stringResource(R.string.pin_wrong)
     when (flow) {
         PinFlow.TURN_OFF_LOCK -> PinScreen(
-            title = "Enter your PIN",
-            subtitle = "The lock turns off and your other apps come back.",
+            title = stringResource(R.string.pin_enter_title),
+            subtitle = stringResource(R.string.pin_enter_subtitle),
             mode = PinMode.VERIFY,
             onCancel = onClose,
         ) { pin ->
             if (vm.checkPin(pin)) {
                 vm.setLockEnabled(false)
-                vm.showMessage("Focus lock is off.")
+                vm.showMessage(context.getString(R.string.lock_off_msg))
                 onClose()
                 null
-            } else "Wrong PIN. Try again."
+            } else wrongPin
         }
 
         PinFlow.CREATE_THEN_LOCK -> PinScreen(
-            title = "Choose a 4-digit PIN",
-            subtitle = "You will need it to turn the lock off. Pick one you will remember.",
+            title = stringResource(R.string.pin_choose_title),
+            subtitle = stringResource(R.string.pin_choose_subtitle),
             mode = PinMode.CREATE,
             onCancel = onClose,
         ) { pin ->
             vm.setPin(pin)
             vm.setLockEnabled(true)
-            vm.showMessage("PIN saved. Focus lock is on.")
+            vm.showMessage(context.getString(R.string.pin_saved_lock_on))
             onClose()
             null
         }
 
         PinFlow.CHANGE_VERIFY -> PinScreen(
-            title = "Enter your current PIN",
-            subtitle = "Then you can choose a new one.",
+            title = stringResource(R.string.pin_current_title),
+            subtitle = stringResource(R.string.pin_current_subtitle),
             mode = PinMode.VERIFY,
             onCancel = onClose,
         ) { pin ->
             if (vm.checkPin(pin)) {
                 onNext(PinFlow.CHANGE_CREATE)
                 null
-            } else "Wrong PIN. Try again."
+            } else wrongPin
         }
 
         PinFlow.CHANGE_CREATE -> PinScreen(
-            title = "Choose a new PIN",
-            subtitle = "4 digits.",
+            title = stringResource(R.string.pin_new_title),
+            subtitle = stringResource(R.string.pin_new_subtitle),
             mode = PinMode.CREATE,
             onCancel = onClose,
         ) { pin ->
             vm.setPin(pin)
-            vm.showMessage("PIN changed.")
+            vm.showMessage(context.getString(R.string.pin_changed))
             onClose()
             null
         }
