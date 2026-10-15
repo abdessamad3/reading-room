@@ -106,6 +106,8 @@ data class Settings(
     val keepAwake: Boolean = true,
     /** Screen brightness 0.05..1, or [BRIGHTNESS_SYSTEM] to follow the phone. */
     val brightness: Float = BRIGHTNESS_SYSTEM,
+    /** When the last backup file was saved (milliseconds), or 0 if never. */
+    val lastBackupAt: Long = 0L,
 ) {
     val hasPin: Boolean get() = pinHash != null && pinSalt != null
 }
@@ -115,6 +117,8 @@ data class AppState(
     val books: List<Book> = emptyList(),
     val settings: Settings = Settings(),
     val readingLog: Map<String, Int> = emptyMap(),
+    /** Notes restored from a backup for books that are not on this phone yet. */
+    val pending: List<BackupBook> = emptyList(),
 )
 
 const val BRIGHTNESS_SYSTEM = -1f

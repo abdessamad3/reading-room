@@ -1,5 +1,7 @@
 package com.readingroom.app
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +15,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +32,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.text.DateFormat
+import java.util.Date
 
 private const val ADB_COMMAND = "adb shell dpm set-device-owner com.readingroom.app/.AdminReceiver"
 
@@ -43,6 +48,12 @@ fun SettingsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val settings = state.settings
+    val saveBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) viewModel.exportBackup(uri)
+    }
+    val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) viewModel.restoreBackup(uri)
+    }
 
     Column(Modifier.fillMaxSize()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)) {
@@ -103,6 +114,25 @@ fun SettingsScreen(
                         )
                     }
                     TextButton(onClick = onChangePin) { Text(if (settings.hasPin) "Change" else "Set") }
+                }
+            }
+
+            Section("Backup to Google Drive") {
+                Text(
+                    "Saves your notes, highlights, bookmarks, reading place and reading time. It does not include the PDFs. " +
+                        "In the file picker, choose Google Drive. To restore on a new phone, install the app, tap Restore and " +
+                        "pick the same file, then import your PDFs and the notes come back.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Text(
+                    if (settings.lastBackupAt == 0L) "No backup yet."
+                    else "Last backup: ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(settings.lastBackupAt))}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { saveBackup.launch(viewModel.backupFileName()) }) { Text("Back up now") }
+                    OutlinedButton(onClick = { openBackup.launch(arrayOf("application/json", "application/octet-stream", "text/plain", "*/*")) }) { Text("Restore") }
                 }
             }
 

@@ -13,7 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 sealed interface Screen {
@@ -25,6 +27,10 @@ sealed interface Screen {
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val store = Store(app)
+
+    private companion object {
+        const val MAX_BACKUP_BYTES = 20 * 1024 * 1024
+    }
 
     private val _state = MutableStateFlow(store.load())
     val state: StateFlow<AppState> = _state.asStateFlow()
@@ -55,6 +61,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             var added = 0
             var failed = 0
+            var restoredNotes = 0
             for (uri in uris) {
                 if (_state.value.books.any { it.uri == uri.toString() }) continue
                 val book = withContext(Dispatchers.IO) { readBook(uri) }
@@ -62,7 +69,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     runCatching {
                         context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    change { it.copy(books = it.books + book) }
+                    val (withNotes, rest) = BackupCodec.attachPending(book, _state.value.pending)
+                    if (withNotes.annotations.size > book.annotations.size) restoredNotes += withNotes.annotations.size
+                    change { it.copy(books = it.books + withNotes, pending = rest) }
                     added++
                 }
             }
@@ -70,6 +79,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 when {
                     failed > 0 && added == 0 -> "That file could not be opened as a PDF."
                     failed > 0 -> "Added $added, but $failed could not be opened."
+                    added > 0 && restoredNotes > 0 ->
+                        "Added $added PDF${if (added == 1) "" else "s"} and brought back $restoredNotes saved note${if (restoredNotes == 1) "" else "s"}."
                     added > 0 -> "Added $added PDF${if (added == 1) "" else "s"}."
                     else -> "Already in your library."
                 },
@@ -140,6 +151,77 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun deleteAnnotation(bookId: String, annotationId: String) =
         changeBook(bookId) { b -> b.copy(annotations = b.annotations.filterNot { it.id == annotationId }) }
+
+    // ----- backup -----
+
+    /** Suggested file name, so backups sort by date in Drive. */
+    fun backupFileName(): String = "reading-room-backup-${LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)}.json"
+
+    fun exportBackup(uri: Uri) {
+        val context = getApplication<Application>()
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            val json = BackupCodec.toJson(BackupCodec.create(_state.value, now))
+            val ok = withContext(Dispatchers.IO) {
+                try {
+                    context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(json.toByteArray(Charsets.UTF_8)) } != null
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            if (ok) {
+                change { it.copy(settings = it.settings.copy(lastBackupAt = now)) }
+                showMessage("Backup saved. It holds your notes, highlights and reading place, not the PDFs.")
+            } else {
+                showMessage("The backup could not be saved. Try another location.")
+            }
+        }
+    }
+
+    fun restoreBackup(uri: Uri) {
+        val context = getApplication<Application>()
+        viewModelScope.launch {
+            val text = withContext(Dispatchers.IO) {
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        // A backup is small. Refuse anything huge rather than run out of memory.
+                        val out = ByteArrayOutputStream()
+                        val buffer = ByteArray(8192)
+                        var total = 0
+                        var tooBig = false
+                        while (true) {
+                            val n = input.read(buffer)
+                            if (n < 0) break
+                            total += n
+                            if (total > MAX_BACKUP_BYTES) {
+                                tooBig = true
+                                break
+                            }
+                            out.write(buffer, 0, n)
+                        }
+                        if (tooBig) null else String(out.toByteArray(), Charsets.UTF_8)
+                    }
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            val backup = text?.let { BackupCodec.fromJson(it) }
+            if (backup == null) {
+                showMessage("That file is not a Reading Room backup.")
+                return@launch
+            }
+            val result = BackupCodec.restore(_state.value, backup)
+            change { result.state }
+            showMessage(
+                buildString {
+                    append("Restored ${result.matched} book${if (result.matched == 1) "" else "s"}.")
+                    if (result.waiting > 0) {
+                        append(" ${result.waiting} more will get their notes when you import those PDFs.")
+                    }
+                },
+            )
+        }
+    }
 
     // ----- reading time -----
 
