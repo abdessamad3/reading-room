@@ -94,7 +94,7 @@ class TextOpsTest {
     @Test
     fun snippetShowsContextAndEllipses() {
         val long = (1..20).map { Word("w$it", 0f, 0f, 0f, 0f) }
-        assertEquals("… w5 w6 w7 w8 w9 w10 w11 w12 w13 w14 w15 w16 …", TextOps.snippet(long, 10..10 + 0, before = 5, after = 5))
+        assertEquals("… w6 w7 w8 w9 w10 w11 w12 w13 w14 w15 w16 …", TextOps.snippet(long, 10..10, before = 5, after = 5))
         assertEquals("w1 w2 w3 w4 …", TextOps.snippet(long, 0..0, before = 5, after = 3))
     }
 
