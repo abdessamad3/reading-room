@@ -99,6 +99,14 @@ class AnnotationTest {
     }
 
     @Test
+    fun thinHighlightIsEasyToTapWithAFingerSizedMargin() {
+        val thin = mark(AnnotationKind.HIGHLIGHT, 0.2f, 0.300f, 0.6f, 0.303f)
+        // 0.03 of the page height away is a miss with the default margin but a hit with a wider one.
+        assertFalse(thin.contains(0.4f, 0.33f, 0.07f, 0.05f))
+        assertTrue(thin.contains(0.4f, 0.33f, 0.07f, 0.05f, slopX = 0.03f, slopY = 0.03f))
+    }
+
+    @Test
     fun noteIsHitOnlyOnItsIcon() {
         val n = mark(AnnotationKind.NOTE, 0.5f, 0.5f, 0.5f, 0.5f)
         assertTrue(n.contains(0.52f, 0.52f, 0.07f, 0.05f))

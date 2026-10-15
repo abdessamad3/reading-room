@@ -29,7 +29,7 @@ class LockController(private val activity: Activity) {
 
     fun engage() {
         if (isDeviceOwner) {
-            dpm.setLockTaskPackages(admin, arrayOf(activity.packageName))
+            dpm.setLockTaskPackages(admin, (listOf(activity.packageName) + pickerPackages()).distinct().toTypedArray())
             if (Build.VERSION.SDK_INT >= 28) {
                 dpm.setLockTaskFeatures(admin, DevicePolicyManager.LOCK_TASK_FEATURE_NONE)
             }
@@ -40,6 +40,16 @@ class LockController(private val activity: Activity) {
             dpm.addPersistentPreferredActivity(admin, home, ComponentName(activity, MainActivity::class.java))
         }
         if (!isLocked) runCatching { activity.startLockTask() }
+    }
+
+    /** The system file picker has to be allowed in lock mode, or Import and Backup could not open it. */
+    private fun pickerPackages(): List<String> {
+        val pm = activity.packageManager
+        val intents = listOf(
+            Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"),
+            Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"),
+        )
+        return intents.flatMap { pm.queryIntentActivities(it, 0) }.map { it.activityInfo.packageName }
     }
 
     fun release() {

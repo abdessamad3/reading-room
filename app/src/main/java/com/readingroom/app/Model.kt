@@ -34,9 +34,15 @@ data class Annotation(
     val createdAt: Long = 0L,
 ) {
     /** True when the point (x, y) touches this mark. [markerW] and [markerH] are the note icon size. */
-    fun contains(x: Float, y: Float, markerW: Float, markerH: Float): Boolean = when (kind) {
-        AnnotationKind.HIGHLIGHT ->
-            x in (left - HIT_SLOP)..(right + HIT_SLOP) && y in (top - HIT_SLOP)..(bottom + HIT_SLOP)
+    fun contains(
+        x: Float,
+        y: Float,
+        markerW: Float,
+        markerH: Float,
+        slopX: Float = HIT_SLOP,
+        slopY: Float = HIT_SLOP,
+    ): Boolean = when (kind) {
+        AnnotationKind.HIGHLIGHT -> x in (left - slopX)..(right + slopX) && y in (top - slopY)..(bottom + slopY)
         AnnotationKind.NOTE -> x in left..(left + markerW) && y in top..(top + markerH)
     }
 

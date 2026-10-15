@@ -10,6 +10,7 @@ import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -49,6 +50,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.StickyNote2
@@ -148,11 +150,14 @@ private fun palette(theme: ReaderTheme): Palette = when (theme) {
 }
 
 /** What a finger does on the page. */
-private enum class Tool { READ, HIGHLIGHT, NOTE }
+private enum class Tool { READ, HIGHLIGHT, NOTE, ERASE }
 
 private const val MAX_ZOOM = 3f
 private const val ZOOM_STEP = 0.25f
 private val NOTE_MARKER = 26.dp
+
+/** Finger-sized margin around a mark that still counts as touching it. */
+private val HIT_MARGIN = 14.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -326,6 +331,10 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                             editingIsNew = true
                         },
                         onOpen = { editing = it; editingIsNew = false },
+                        onErase = {
+                            viewModel.deleteAnnotation(bookId, it.id)
+                            viewModel.showMessage(if (it.kind == AnnotationKind.NOTE) "Note deleted." else "Highlight deleted.")
+                        },
                     )
                 }
             }
@@ -381,6 +390,7 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                     foreground = colors.foreground,
                     onRead = { tool = Tool.READ },
                     onNote = { tool = Tool.NOTE },
+                    onErase = { tool = Tool.ERASE },
                     onColor = { penColor = it; tool = Tool.HIGHLIGHT },
                 )
                 Slider(
@@ -436,6 +446,10 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
             onGo = { a ->
                 notesSheet = false
                 scope.launch { pagerState.scrollToPage(a.page.coerceIn(0, lastIndex)) }
+            },
+            onDelete = {
+                viewModel.deleteAnnotation(bookId, it.id)
+                viewModel.showMessage(if (it.kind == AnnotationKind.NOTE) "Note deleted." else "Highlight deleted.")
             },
             onCopy = {
                 val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -496,6 +510,7 @@ private fun ToolRow(
     foreground: Color,
     onRead: () -> Unit,
     onNote: () -> Unit,
+    onErase: () -> Unit,
     onColor: (MarkColor) -> Unit,
 ) {
     val accent = MaterialTheme.colorScheme.primary
@@ -523,8 +538,12 @@ private fun ToolRow(
         IconButton(onClick = onNote) {
             Icon(Icons.Default.StickyNote2, "Add a note", tint = if (tool == Tool.NOTE) accent else foreground)
         }
+        IconButton(onClick = onErase) {
+            Icon(Icons.Default.Delete, "Eraser", tint = if (tool == Tool.ERASE) MaterialTheme.colorScheme.error else foreground)
+        }
         Text(
             when (tool) {
+                Tool.ERASE -> "Tap a mark to delete it"
                 Tool.READ -> "Tap a mark to edit it"
                 Tool.HIGHLIGHT -> "Drag over text"
                 Tool.NOTE -> "Tap where the note goes"
@@ -549,6 +568,7 @@ private fun PdfPageView(
     onHighlight: (Float, Float, Float, Float) -> Unit,
     onNote: (Float, Float) -> Unit,
     onOpen: (Annotation) -> Unit,
+    onErase: (Annotation) -> Unit,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
@@ -569,7 +589,7 @@ private fun PdfPageView(
                         colorFilter = filter,
                         modifier = Modifier.fillMaxSize(),
                     )
-                    AnnotationLayer(annotations, tool, color, onHighlight, onNote, onOpen)
+                    AnnotationLayer(annotations, tool, color, onHighlight, onNote, onOpen, onErase)
                 }
             }
         }
@@ -585,6 +605,7 @@ private fun AnnotationLayer(
     onHighlight: (Float, Float, Float, Float) -> Unit,
     onNote: (Float, Float) -> Unit,
     onOpen: (Annotation) -> Unit,
+    onErase: (Annotation) -> Unit,
 ) {
     var drag by remember { mutableStateOf<Pair<Offset, Offset>?>(null) }
 
@@ -601,6 +622,10 @@ private fun AnnotationLayer(
                     onOpen(hit)
                 }
             }
+        }
+
+        Tool.ERASE -> Modifier.pointerInput(annotations) {
+            detectTapGestures { pos -> hitTest(annotations, pos)?.let(onErase) }
         }
 
         Tool.NOTE -> Modifier.pointerInput(annotations, color) {
@@ -679,13 +704,15 @@ private fun AnnotationLayer(
     }
 }
 
-/** The topmost mark under [pos], using the note icon size for notes. */
+/** The topmost mark under [pos]. Highlights get a finger-sized margin so thin ones are easy to hit. */
 private fun PointerInputScope.hitTest(annotations: List<Annotation>, pos: Offset): Annotation? {
     val w = size.width.toFloat()
     val h = size.height.toFloat()
     val markerW = NOTE_MARKER.toPx() / w
     val markerH = NOTE_MARKER.toPx() / h
-    return annotations.lastOrNull { it.contains(pos.x / w, pos.y / h, markerW, markerH) }
+    val slopX = HIT_MARGIN.toPx() / w
+    val slopY = HIT_MARGIN.toPx() / h
+    return annotations.lastOrNull { it.contains(pos.x / w, pos.y / h, markerW, markerH, slopX, slopY) }
 }
 
 @Composable
@@ -711,6 +738,19 @@ private fun AnnotationDialog(
                     minLines = 3,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (!isNew) {
+                    OutlinedButton(
+                        onClick = onDelete,
+                        modifier = Modifier.fillMaxWidth(),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                    ) {
+                        Icon(Icons.Default.Delete, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                        Text(
+                            if (isNote) " Delete this note" else " Delete this highlight",
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("Color", style = MaterialTheme.typography.bodyMedium)
                     MarkColor.entries.forEach { c ->
@@ -727,12 +767,7 @@ private fun AnnotationDialog(
             }
         },
         confirmButton = { TextButton(onClick = { onSave(initial.copy(text = text.trim(), color = color)) }) { Text("Save") } },
-        dismissButton = {
-            Row {
-                if (!isNew) TextButton(onClick = onDelete) { Text("Delete", color = MaterialTheme.colorScheme.error) }
-                TextButton(onClick = onDismiss) { Text("Cancel") }
-            }
-        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
 
@@ -743,6 +778,7 @@ private fun NotesSheet(
     annotations: List<Annotation>,
     onGo: (Annotation) -> Unit,
     onCopy: () -> Unit,
+    onDelete: (Annotation) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sorted = remember(annotations) { annotations.sortedWith(compareBy({ it.page }, { it.top }, { it.left })) }
@@ -777,6 +813,13 @@ private fun NotesSheet(
                                 )
                                 if (a.kind == AnnotationKind.HIGHLIGHT && doc != null) HighlightPreview(doc, a)
                                 if (a.text.isNotBlank()) Text(a.text)
+                            }
+                            IconButton(onClick = { onDelete(a) }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    "Delete ${if (a.kind == AnnotationKind.NOTE) "note" else "highlight"} on page ${a.page + 1}",
+                                    tint = MaterialTheme.colorScheme.error,
+                                )
                             }
                         }
                     }
