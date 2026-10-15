@@ -41,6 +41,12 @@ class Store(context: Context) {
                                 put("bottom", a.bottom.toDouble())
                                 put("text", a.text)
                                 put("createdAt", a.createdAt)
+                                put("quote", a.quote)
+                                put("rects", JSONArray().also { rs ->
+                                    a.rects.forEach { r ->
+                                        rs.put(JSONArray(listOf(r.left.toDouble(), r.top.toDouble(), r.right.toDouble(), r.bottom.toDouble())))
+                                    }
+                                })
                             })
                         }
                     })
@@ -111,6 +117,13 @@ class Store(context: Context) {
             bottom = a.getDouble("bottom").toFloat(),
             text = a.optString("text", ""),
             createdAt = a.optLong("createdAt", 0L),
+            quote = a.optString("quote", ""),
+            rects = a.optJSONArray("rects")?.let { rs ->
+                (0 until rs.length()).map { i ->
+                    val r = rs.getJSONArray(i)
+                    Rect4(r.getDouble(0).toFloat(), r.getDouble(1).toFloat(), r.getDouble(2).toFloat(), r.getDouble(3).toFloat())
+                }
+            } ?: emptyList(),
         )
     } catch (e: Exception) {
         null

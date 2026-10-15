@@ -18,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -33,6 +34,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -49,10 +51,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.PanTool
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.StickyNote2
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.AlertDialog
@@ -74,6 +78,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -94,13 +99,16 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -110,8 +118,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.util.UUID
 import kotlin.math.max
 import kotlin.math.min
@@ -158,6 +169,9 @@ private val NOTE_MARKER = 26.dp
 
 /** Finger-sized margin around a mark that still counts as touching it. */
 private val HIT_MARGIN = 14.dp
+
+/** How far from a word (as a fraction of the page) a long press still selects it. */
+private const val SELECT_REACH = 0.06f
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -244,6 +258,22 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
     var editing by remember { mutableStateOf<Annotation?>(null) }
     var editingIsNew by remember { mutableStateOf(false) }
     var hintedHighlight by rememberSaveable { mutableStateOf(false) }
+    var selection by remember { mutableStateOf<Selection?>(null) }
+    var searchSheet by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var warnedNoText by remember { mutableStateOf(false) }
+
+    // The real text of the PDF, opened in the background. Null while loading or when the file can't be read.
+    val text by produceState<PdfText?>(null, book.uri) {
+        val opened = withContext(Dispatchers.IO) { PdfText.open(context, Uri.parse(book.uri)) }
+        value = opened
+        awaitDispose { opened?.close() }
+    }
+    val selectionWords by produceState(emptyList<Word>(), text, selection?.page) {
+        value = selection?.page?.let { text?.words(it) }.orEmpty()
+    }
+    val selectedText = selection?.let { TextOps.selectionText(selectionWords, it.from, it.to) }.orEmpty()
+    LaunchedEffect(pagerState.settledPage) { selection = null }
     val zoom = settings.zoom
     val currentPage = pagerState.currentPage
     val bookmarked = currentPage in book.bookmarks
@@ -270,6 +300,33 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
         createdAt = System.currentTimeMillis(),
     )
 
+    fun highlightSelection(color: MarkColor, thenEdit: Boolean) {
+        val sel = selection ?: return
+        val rects = TextOps.rectsFor(selectionWords, sel.from, sel.to)
+        if (rects.isEmpty()) return
+        val box = rects.reduce { a, b -> a.union(b) }
+        val mark = Annotation(
+            id = UUID.randomUUID().toString(),
+            page = sel.page,
+            kind = AnnotationKind.HIGHLIGHT,
+            color = color,
+            left = box.left,
+            top = box.top,
+            right = box.right,
+            bottom = box.bottom,
+            createdAt = System.currentTimeMillis(),
+            rects = rects,
+            quote = selectedText,
+        )
+        if (thenEdit) {
+            editing = mark
+            editingIsNew = true
+        } else {
+            viewModel.addAnnotation(bookId, mark)
+        }
+        selection = null
+    }
+
     Box(Modifier.fillMaxSize().background(colors.background)) {
         val d = doc
         when {
@@ -293,8 +350,13 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
             d == null -> Unit
 
             else -> Box(
-                Modifier.fillMaxSize().pointerInput(tool) {
+                Modifier.fillMaxSize().pointerInput(tool, selection != null) {
                     detectTapGestures { offset ->
+                        // A tap away from the selection just clears it.
+                        if (selection != null) {
+                            selection = null
+                            return@detectTapGestures
+                        }
                         // While annotating, taps belong to the page, not to page turning.
                         if (tool != Tool.READ) return@detectTapGestures
                         val third = size.width * 0.3f
@@ -335,13 +397,23 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                             viewModel.deleteAnnotation(bookId, it.id)
                             viewModel.showMessage(if (it.kind == AnnotationKind.NOTE) "Note deleted." else "Highlight deleted.")
                         },
+                        text = text,
+                        selection = selection?.takeIf { it.page == index },
+                        searchQuery = searchQuery,
+                        onSelect = { anchor, head -> selection = Selection(index, anchor, head) },
+                        onNoText = {
+                            if (!warnedNoText) {
+                                warnedNoText = true
+                                viewModel.showMessage("No selectable text on this page. It may be a scan.")
+                            }
+                        },
                     )
                 }
             }
         }
 
         AnimatedVisibility(
-            visible = chrome || tool != Tool.READ,
+            visible = chrome || tool != Tool.READ || selection != null,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.TopCenter),
@@ -361,6 +433,9 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+                IconButton(onClick = { searchSheet = true }) {
+                    Icon(Icons.Default.Search, "Search in this PDF", tint = colors.foreground)
+                }
                 IconButton(onClick = { notesSheet = true }) {
                     Icon(Icons.Default.EditNote, "Notes and highlights, ${book.annotations.size} so far", tint = colors.foreground)
                 }
@@ -375,8 +450,25 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
             }
         }
 
+        if (searchQuery.isNotBlank()) {
+            Row(
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 64.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .clickable(role = Role.Button) { searchQuery = "" }
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text("\u201C$searchQuery\u201D", color = MaterialTheme.colorScheme.onPrimaryContainer, style = MaterialTheme.typography.labelLarge)
+                Icon(Icons.Default.Close, "Clear search marks", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+        }
+
         AnimatedVisibility(
-            visible = chrome || tool != Tool.READ,
+            visible = chrome || tool != Tool.READ || selection != null,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -384,14 +476,32 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
             Column(
                 Modifier.fillMaxWidth().background(colors.background.copy(alpha = 0.95f)).padding(horizontal = 16.dp, vertical = 6.dp),
             ) {
+                if (selection != null) {
+                    SelectionBar(
+                        text = selectedText,
+                        foreground = colors.foreground,
+                        onCopy = {
+                            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            cm.setPrimaryClip(ClipData.newPlainText("Selected text", selectedText))
+                            viewModel.showMessage("Copied.")
+                            selection = null
+                        },
+                        onNote = { highlightSelection(penColor, thenEdit = true) },
+                        onClose = { selection = null },
+                    )
+                }
                 ToolRow(
                     tool = tool,
                     color = penColor,
                     foreground = colors.foreground,
+                    selecting = selection != null,
                     onRead = { tool = Tool.READ },
                     onNote = { tool = Tool.NOTE },
                     onErase = { tool = Tool.ERASE },
-                    onColor = { penColor = it; tool = Tool.HIGHLIGHT },
+                    onColor = {
+                        penColor = it
+                        if (selection != null) highlightSelection(it, thenEdit = false) else tool = Tool.HIGHLIGHT
+                    },
                 )
                 Slider(
                     value = sliding ?: currentPage.toFloat(),
@@ -436,6 +546,21 @@ fun ReaderScreen(viewModel: AppViewModel, bookId: String) {
                 editing = null
             },
             onDismiss = { editing = null },
+        )
+    }
+
+    if (searchSheet) {
+        SearchSheet(
+            text = text,
+            pageCount = book.pages,
+            initialQuery = searchQuery,
+            onJump = { page, query ->
+                searchQuery = query
+                searchSheet = false
+                scope.launch { pagerState.scrollToPage(page.coerceIn(0, lastIndex)) }
+            },
+            onClear = { searchQuery = "" },
+            onDismiss = { searchSheet = false },
         )
     }
 
@@ -508,6 +633,7 @@ private fun ToolRow(
     tool: Tool,
     color: MarkColor,
     foreground: Color,
+    selecting: Boolean,
     onRead: () -> Unit,
     onNote: () -> Unit,
     onErase: () -> Unit,
@@ -542,11 +668,12 @@ private fun ToolRow(
             Icon(Icons.Default.Delete, "Eraser", tint = if (tool == Tool.ERASE) MaterialTheme.colorScheme.error else foreground)
         }
         Text(
-            when (tool) {
-                Tool.ERASE -> "Tap a mark to delete it"
-                Tool.READ -> "Tap a mark to edit it"
-                Tool.HIGHLIGHT -> "Drag over text"
-                Tool.NOTE -> "Tap where the note goes"
+            when {
+                selecting -> "Pick a color to highlight the selection"
+                tool == Tool.ERASE -> "Tap a mark to delete it"
+                tool == Tool.HIGHLIGHT -> "Drag over the page to highlight"
+                tool == Tool.NOTE -> "Tap where the note goes"
+                else -> "Press and hold text to select it"
             },
             Modifier.weight(1f),
             color = foreground.copy(alpha = 0.75f),
@@ -569,6 +696,11 @@ private fun PdfPageView(
     onNote: (Float, Float) -> Unit,
     onOpen: (Annotation) -> Unit,
     onErase: (Annotation) -> Unit,
+    text: PdfText?,
+    selection: Selection?,
+    searchQuery: String,
+    onSelect: (Int, Int) -> Unit,
+    onNoText: () -> Unit,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
@@ -576,6 +708,13 @@ private fun PdfPageView(
         val widthPx = with(density) { pageWidth.roundToPx() }.coerceAtLeast(1)
         val bitmap by produceState<Bitmap?>(null, doc, index, widthPx) {
             value = doc.render(index, widthPx)
+        }
+        // The words on this page, for selecting and searching. Empty until read, or for a scan.
+        val words by produceState(emptyList<Word>(), text, index) {
+            value = text?.words(index).orEmpty()
+        }
+        val matches = remember(words, searchQuery) {
+            if (searchQuery.isBlank()) emptyList() else TextOps.findMatches(words, searchQuery)
         }
         var scrollModifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
         if (zoom > 1.01f) scrollModifier = scrollModifier.horizontalScroll(rememberScrollState())
@@ -589,7 +728,20 @@ private fun PdfPageView(
                         colorFilter = filter,
                         modifier = Modifier.fillMaxSize(),
                     )
-                    AnnotationLayer(annotations, tool, color, onHighlight, onNote, onOpen, onErase)
+                    AnnotationLayer(
+                        annotations = annotations,
+                        tool = tool,
+                        color = color,
+                        words = words,
+                        selection = selection,
+                        matches = matches,
+                        onHighlight = onHighlight,
+                        onNote = onNote,
+                        onOpen = onOpen,
+                        onErase = onErase,
+                        onSelect = onSelect,
+                        onNoText = onNoText,
+                    )
                 }
             }
         }
@@ -602,24 +754,59 @@ private fun AnnotationLayer(
     annotations: List<Annotation>,
     tool: Tool,
     color: MarkColor,
+    words: List<Word>,
+    selection: Selection?,
+    matches: List<IntRange>,
     onHighlight: (Float, Float, Float, Float) -> Unit,
     onNote: (Float, Float) -> Unit,
     onOpen: (Annotation) -> Unit,
     onErase: (Annotation) -> Unit,
+    onSelect: (Int, Int) -> Unit,
+    onNoText: () -> Unit,
 ) {
     var drag by remember { mutableStateOf<Pair<Offset, Offset>?>(null) }
+    val haptic = LocalHapticFeedback.current
+    val selectionRects = remember(words, selection) {
+        if (selection == null) emptyList() else TextOps.rectsFor(words, selection.from, selection.to)
+    }
+    val matchRects = remember(words, matches) { matches.flatMap { TextOps.rectsFor(words, it.first, it.last) } }
 
     val input: Modifier = when (tool) {
-        // Reading: only react to a tap that lands on a mark, and leave every other touch alone.
-        Tool.READ -> Modifier.pointerInput(annotations) {
+        // Reading: a tap on a mark opens it, a press and hold on text selects words. Every other
+        // touch is left alone, so page turning and scrolling keep working.
+        Tool.READ -> Modifier.pointerInput(annotations, words) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
-                val up = waitForUpOrCancellation() ?: return@awaitEachGesture
-                if ((up.position - down.position).getDistance() > viewConfiguration.touchSlop) return@awaitEachGesture
-                val hit = hitTest(annotations, up.position)
-                if (hit != null) {
-                    up.consume()
-                    onOpen(hit)
+                var heldLong = true
+                val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                    val released = waitForUpOrCancellation()
+                    heldLong = false
+                    released
+                }
+                if (up != null) {
+                    if ((up.position - down.position).getDistance() > viewConfiguration.touchSlop) return@awaitEachGesture
+                    val hit = hitTest(annotations, up.position)
+                    if (hit != null) {
+                        up.consume()
+                        onOpen(hit)
+                    }
+                    return@awaitEachGesture
+                }
+                if (!heldLong) return@awaitEachGesture
+
+                val w = size.width.toFloat()
+                val h = size.height.toFloat()
+                val start = TextOps.nearestWord(words, down.position.x / w, down.position.y / h, SELECT_REACH)
+                if (start < 0) {
+                    if (words.isEmpty()) onNoText()
+                    return@awaitEachGesture
+                }
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onSelect(start, start)
+                drag(down.id) { change ->
+                    change.consume()
+                    val end = TextOps.nearestWord(words, change.position.x / w, change.position.y / h)
+                    if (end >= 0) onSelect(start, end)
                 }
             }
         }
@@ -671,12 +858,14 @@ private fun AnnotationLayer(
             val base = Color(a.color.argb)
             when (a.kind) {
                 AnnotationKind.HIGHLIGHT -> {
-                    drawRect(
-                        color = base,
-                        topLeft = Offset(a.left * w, a.top * h),
-                        size = Size((a.right - a.left) * w, (a.bottom - a.top) * h),
-                        alpha = 0.38f,
-                    )
+                    a.boxes.forEach { r ->
+                        drawRect(
+                            color = base,
+                            topLeft = Offset(r.left * w, r.top * h),
+                            size = Size((r.right - r.left) * w, (r.bottom - r.top) * h),
+                            alpha = 0.38f,
+                        )
+                    }
                     if (a.text.isNotBlank()) {
                         drawCircle(Color(0xCC000000), radius = 3.dp.toPx(), center = Offset(a.right * w, a.top * h))
                     }
@@ -692,6 +881,22 @@ private fun AnnotationLayer(
                     }
                 }
             }
+        }
+        matchRects.forEach { r ->
+            drawRect(
+                color = Color(0xFFFF9800),
+                topLeft = Offset(r.left * w, r.top * h),
+                size = Size((r.right - r.left) * w, (r.bottom - r.top) * h),
+                alpha = 0.45f,
+            )
+        }
+        selectionRects.forEach { r ->
+            drawRect(
+                color = Color(0xFF3B82F6),
+                topLeft = Offset(r.left * w, r.top * h),
+                size = Size((r.right - r.left) * w, (r.bottom - r.top) * h),
+                alpha = 0.35f,
+            )
         }
         drag?.let { (from, to) ->
             drawRect(
@@ -731,6 +936,15 @@ private fun AnnotationDialog(
         title = { Text(if (isNote) "Note on page ${initial.page + 1}" else "Highlight on page ${initial.page + 1}") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                if (initial.quote.isNotBlank()) {
+                    Text(
+                        "\u201C${initial.quote}\u201D",
+                        fontStyle = FontStyle.Italic,
+                        maxLines = 6,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
@@ -811,7 +1025,16 @@ private fun NotesSheet(
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
-                                if (a.kind == AnnotationKind.HIGHLIGHT && doc != null) HighlightPreview(doc, a)
+                                if (a.quote.isNotBlank()) {
+                                    Text(
+                                        "\u201C${a.quote}\u201D",
+                                        fontStyle = FontStyle.Italic,
+                                        maxLines = 5,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                } else if (a.kind == AnnotationKind.HIGHLIGHT && doc != null) {
+                                    HighlightPreview(doc, a)
+                                }
                                 if (a.text.isNotBlank()) Text(a.text)
                             }
                             IconButton(onClick = { onDelete(a) }) {
@@ -861,3 +1084,102 @@ private fun HighlightPreview(doc: PdfDoc, a: Annotation) {
         )
     }
 }
+
+/** Shown while words are selected: the text, and what to do with it. */
+@Composable
+private fun SelectionBar(text: String, foreground: Color, onCopy: () -> Unit, onNote: () -> Unit, onClose: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            if (text.isBlank()) "Selecting\u2026" else text,
+            Modifier.weight(1f).padding(start = 4.dp),
+            color = foreground,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodySmall,
+            fontStyle = FontStyle.Italic,
+        )
+        IconButton(onClick = onCopy, enabled = text.isNotBlank()) { Icon(Icons.Default.ContentCopy, "Copy selected text", tint = foreground) }
+        IconButton(onClick = onNote, enabled = text.isNotBlank()) { Icon(Icons.Default.StickyNote2, "Highlight and add a note", tint = foreground) }
+        IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Clear selection", tint = foreground) }
+    }
+}
+
+private data class SearchResult(val page: Int, val snippet: String)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchSheet(
+    text: PdfText?,
+    pageCount: Int,
+    initialQuery: String,
+    onJump: (Int, String) -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var query by remember { mutableStateOf(initialQuery) }
+    val results = remember { mutableStateListOf<SearchResult>() }
+    var scanned by remember { mutableIntStateOf(0) }
+    var finished by remember { mutableStateOf(false) }
+    val trimmed = query.trim()
+
+    // Reads the book page by page after a short pause in typing.
+    LaunchedEffect(trimmed, text) {
+        results.clear()
+        scanned = 0
+        finished = false
+        if (text == null || trimmed.length < 2) return@LaunchedEffect
+        delay(350)
+        for (page in 0 until pageCount) {
+            val words = text.words(page)
+            for (range in TextOps.findMatches(words, trimmed)) {
+                if (results.size < MAX_SEARCH_RESULTS) results.add(SearchResult(page, TextOps.snippet(words, range)))
+            }
+            scanned = page + 1
+            if (results.size >= MAX_SEARCH_RESULTS) break
+        }
+        finished = true
+    }
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            Modifier.fillMaxWidth().imePadding().padding(horizontal = 20.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text("Search in this PDF") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+                when {
+                    text == null -> "Search is not ready yet, or is not available for this PDF (it may be locked)."
+                    trimmed.length < 2 -> "Type at least 2 letters."
+                    finished && results.isEmpty() -> "No matches. Scanned pages have no searchable text."
+                    finished -> "${results.size}${if (results.size >= MAX_SEARCH_RESULTS) "+" else ""} matches"
+                    else -> "Searching\u2026 page $scanned of $pageCount"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            LazyColumn(Modifier.heightIn(max = 380.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                items(results.size) { i ->
+                    val r = results[i]
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable { onJump(r.page, trimmed) }.padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text("p. ${r.page + 1}", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+                        Text(r.snippet, Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+            }
+            if (initialQuery.isNotBlank()) {
+                TextButton(onClick = { onClear(); onDismiss() }) { Text("Clear search marks on the pages") }
+            }
+        }
+    }
+}
+
+private const val MAX_SEARCH_RESULTS = 200

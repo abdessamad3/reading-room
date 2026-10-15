@@ -32,7 +32,14 @@ data class Annotation(
     val bottom: Float,
     val text: String = "",
     val createdAt: Long = 0L,
+    /** For a highlight made from selected text: one box per line. Empty for a hand-drawn one. */
+    val rects: List<Rect4> = emptyList(),
+    /** For a highlight made from selected text: the words under it. */
+    val quote: String = "",
 ) {
+    /** The areas a highlight covers: its per-line boxes, or the single box it was drawn with. */
+    val boxes: List<Rect4> get() = rects.ifEmpty { listOf(Rect4(left, top, right, bottom)) }
+
     /** True when the point (x, y) touches this mark. [markerW] and [markerH] are the note icon size. */
     fun contains(
         x: Float,
@@ -42,7 +49,7 @@ data class Annotation(
         slopX: Float = HIT_SLOP,
         slopY: Float = HIT_SLOP,
     ): Boolean = when (kind) {
-        AnnotationKind.HIGHLIGHT -> x in (left - slopX)..(right + slopX) && y in (top - slopY)..(bottom + slopY)
+        AnnotationKind.HIGHLIGHT -> boxes.any { it.contains(x, y, slopX, slopY) }
         AnnotationKind.NOTE -> x in left..(left + markerW) && y in top..(top + markerH)
     }
 
@@ -63,7 +70,11 @@ object NotesExport {
                     AnnotationKind.HIGHLIGHT -> "highlight, ${a.color.label.lowercase()}"
                 }
                 val header = "Page ${a.page + 1} ($label)"
-                if (a.text.isBlank()) header else "$header\n${a.text.trim()}"
+                listOfNotNull(
+                    header,
+                    a.quote.trim().takeIf { it.isNotEmpty() }?.let { "\u201C$it\u201D" },
+                    a.text.trim().takeIf { it.isNotEmpty() },
+                ).joinToString("\n")
             }
         return "$title\nNotes and highlights\n\n$body"
     }

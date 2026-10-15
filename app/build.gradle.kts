@@ -64,7 +64,12 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
 
+    // Reads the text and word positions of a PDF (the page picture still comes from PdfRenderer).
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     testImplementation("junit:junit:4.13.2")
+    // The real org.json, so storage and backup code can be unit tested (Android's copy is a stub).
+    testImplementation("org.json:json:20240303")
 }
